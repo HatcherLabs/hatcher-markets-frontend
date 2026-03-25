@@ -175,12 +175,18 @@ export default function RegisterPage() {
           </form>
 
           {/* Links */}
-          <div className="mt-6 text-center">
+          <div className="mt-6 space-y-3 text-center">
             <p className="text-sm text-white/40">
               Already have an account?{' '}
               <Link href="/login" className="text-purple-400 hover:text-purple-300 transition-colors">
                 Login
               </Link>
+            </p>
+            <p className="text-xs text-white/30">
+              Need help?{' '}
+              <a href="mailto:support@hatcher.host" className="text-purple-400/70 hover:text-purple-300 transition-colors">
+                support@hatcher.host
+              </a>
             </p>
           </div>
         </div>

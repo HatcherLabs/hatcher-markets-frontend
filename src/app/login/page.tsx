@@ -150,6 +150,12 @@ export default function LoginPage() {
                 Create an account on hatcher.host <ExternalLink className="w-3 h-3" />
               </a>
             </p>
+            <p className="text-xs text-white/30">
+              Need help?{' '}
+              <a href="mailto:support@hatcher.host" className="text-purple-400/70 hover:text-purple-300 transition-colors">
+                support@hatcher.host
+              </a>
+            </p>
           </div>
         </div>
       </motion.div>

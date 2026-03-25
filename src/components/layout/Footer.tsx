@@ -54,6 +54,24 @@ export default function Footer() {
                   Support
                 </a>
               </li>
+              <li>
+                <a
+                  href="mailto:contact@hatcher.host"
+                  className="text-sm text-white/40 hover:text-white transition-colors"
+                >
+                  Contact
+                </a>
+              </li>
+              <li>
+                <a
+                  href="https://discord.gg/7tY3HjKjMc"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-white/40 hover:text-white transition-colors flex items-center gap-1"
+                >
+                  Discord <ExternalLink className="w-3 h-3" />
+                </a>
+              </li>
             </ul>
           </div>
 
