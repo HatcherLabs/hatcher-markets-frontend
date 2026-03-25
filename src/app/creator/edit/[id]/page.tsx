@@ -64,13 +64,13 @@ export default function EditListingPage() {
       const listing = listings.find((l: any) => l.id === params.id);
       if (listing) {
         setForm({
-          agentId: listing.agentId || '',
+          agentId: listing.hostAgentId || listing.agentId || '',
           name: listing.name || '',
-          shortDescription: listing.shortDescription || '',
+          shortDescription: listing.description || listing.shortDescription || '',
           longDescription: listing.longDescription || '',
           category: listing.category || 'general',
           tags: Array.isArray(listing.tags) ? listing.tags.join(', ') : listing.tags || '',
-          hourlyRate: String(listing.hourlyRate || ''),
+          hourlyRate: String(listing.hourlyRateSol || listing.hourlyRate || ''),
           minHours: String(listing.minHours || 1),
           maxHours: String(listing.maxHours || 720),
           avatarUrl: listing.avatarUrl || '',
@@ -99,14 +99,14 @@ export default function EditListingPage() {
     try {
       await updateListing(params.id as string, {
         name: form.name.trim(),
-        shortDescription: form.shortDescription.trim(),
+        description: form.shortDescription.trim(),
         longDescription: form.longDescription.trim(),
         category: form.category,
         tags: form.tags
           .split(',')
           .map((t) => t.trim())
           .filter(Boolean),
-        hourlyRate: Number(form.hourlyRate),
+        hourlyRateSol: Number(form.hourlyRate),
         minHours: Number(form.minHours) || 1,
         maxHours: Number(form.maxHours) || 720,
         avatarUrl: form.avatarUrl.trim() || undefined,

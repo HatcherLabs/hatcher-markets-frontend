@@ -16,7 +16,8 @@ export async function generateMetadata({
       return { title: 'Agent Not Found' };
     }
 
-    const agent = await res.json();
+    const json = await res.json();
+    const agent = json.data || json;
     const name = agent.name || params.slug;
     const description =
       agent.description ||

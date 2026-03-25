@@ -61,16 +61,16 @@ export default function CreateListingPage() {
     setSubmitting(true);
     try {
       await createListing({
-        agentId: form.agentId.trim(),
+        hostAgentId: form.agentId.trim(),
         name: form.name.trim(),
-        shortDescription: form.shortDescription.trim(),
+        description: form.shortDescription.trim(),
         longDescription: form.longDescription.trim(),
         category: form.category,
         tags: form.tags
           .split(',')
           .map((t) => t.trim())
           .filter(Boolean),
-        hourlyRate: Number(form.hourlyRate),
+        hourlyRateSol: Number(form.hourlyRate),
         minHours: Number(form.minHours) || 1,
         maxHours: Number(form.maxHours) || 720,
         avatarUrl: form.avatarUrl.trim() || undefined,

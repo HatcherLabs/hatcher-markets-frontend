@@ -12,7 +12,7 @@ const categories = ['All', 'Trading', 'Research', 'Support', 'Creative', 'Dev', 
 const sortOptions = [
   { value: 'newest', label: 'Newest' },
   { value: 'popular', label: 'Most Popular' },
-  { value: 'cheapest', label: 'Cheapest' },
+  { value: 'price-low', label: 'Cheapest' },
   { value: 'rating', label: 'Highest Rated' },
 ];
 
@@ -36,7 +36,7 @@ function BrowseAgentsContent() {
         else setLoading(true);
 
         const params: any = { page: pageNum, limit: 12, sort };
-        if (category !== 'All') params.category = category;
+        if (category !== 'All') params.category = category.toLowerCase();
         if (search) params.search = search;
 
         const data = await getListings(params);
@@ -45,7 +45,7 @@ function BrowseAgentsContent() {
         } else {
           setListings(data.listings || []);
         }
-        setTotal(data.total || 0);
+        setTotal(data.pagination?.total || data.total || 0);
       } catch {
         // API not available yet — show empty state
       } finally {

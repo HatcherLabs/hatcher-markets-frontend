@@ -71,7 +71,7 @@ export async function getProfile() {
 }
 
 export async function updateProfile(data: { displayName?: string; avatarUrl?: string; bio?: string }) {
-  return request<any>('/auth/profile', {
+  return request<any>('/auth/me', {
     method: 'PATCH',
     body: JSON.stringify(data),
   });
@@ -96,7 +96,7 @@ export async function getListings(params?: {
   if (params?.page) query.set('page', String(params.page));
   if (params?.limit) query.set('limit', String(params.limit));
   const qs = query.toString();
-  return request<{ listings: any[]; total: number }>(`/listings${qs ? `?${qs}` : ''}`);
+  return request<any>(`/listings${qs ? `?${qs}` : ''}`);
 }
 
 export async function getListing(slug: string) {
@@ -141,7 +141,7 @@ export async function getRental(id: string) {
 
 // ── Reviews ─────────────────────────────────────────────────────
 export async function getReviews(listingId: string) {
-  return request<any[]>(`/listings/${listingId}/reviews`);
+  return request<any>(`/reviews/${listingId}`);
 }
 
 export async function createReview(data: { listingId: string; rating: number; comment: string }) {

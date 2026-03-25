@@ -17,7 +17,7 @@ export default function PaymentModal({ isOpen, onClose, listing, hours, onSucces
   const [step, setStep] = useState<'select' | 'connecting' | 'signing' | 'submitting' | 'redirecting' | 'success'>('select');
   const [error, setError] = useState('');
 
-  const hourlyRate = listing?.hourlyRate || 0;
+  const hourlyRate = listing?.hourlyRateSol || listing?.hourlyRate || 0;
   const totalSol = (hourlyRate * hours).toFixed(4);
   const totalHatch = (hourlyRate * hours * 0.8).toFixed(4); // 20% discount
 

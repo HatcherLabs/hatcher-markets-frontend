@@ -45,8 +45,21 @@ export default function RentalDetailPage() {
   async function fetchRental() {
     try {
       setLoading(true);
-      const data = await getRental(params.id as string);
-      setRental(data.rental || data);
+      const raw = await getRental(params.id as string);
+      const data = raw.rental || raw;
+      // Normalize field names from API response
+      setRental({
+        ...data,
+        agentName: data.listing?.name || data.agentName || 'Agent',
+        agentAvatar: data.listing?.avatarUrl || data.agentAvatar,
+        startTime: data.startsAt || data.startTime,
+        endTime: data.expiresAt || data.endTime,
+        hourlyRate: Number(data.listing?.hourlyRateSol || data.hourlyRate || 0),
+        totalPaid: Number(data.amountSol || data.totalPaid || 0),
+        listingSlug: data.listing?.slug || data.listingSlug,
+        listingId: data.listingId || data.listing?.id,
+        txSignature: data.paymentTx || data.txSignature,
+      });
     } catch {
       // not found
     } finally {

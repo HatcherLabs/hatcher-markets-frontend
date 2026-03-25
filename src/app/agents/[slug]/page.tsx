@@ -60,14 +60,25 @@ export default function AgentDetailPage() {
     if (!slug) return;
 
     setLoading(true);
-    Promise.all([
-      getListing(slug).catch(() => null),
-      getReviews(slug).catch(() => []),
-    ]).then(([listingData, reviewsData]) => {
-      setListing(listingData);
-      setReviews(Array.isArray(reviewsData) ? reviewsData : []);
-      setLoading(false);
-    });
+    getListing(slug)
+      .then((listingData) => {
+        setListing(listingData);
+        // Use reviews embedded in listing response
+        if (listingData?.reviews) {
+          setReviews(Array.isArray(listingData.reviews) ? listingData.reviews : []);
+        }
+        // Also try loading full reviews list by listing ID
+        if (listingData?.id) {
+          getReviews(listingData.id).then((reviewsData: any) => {
+            const list = reviewsData?.reviews || reviewsData;
+            if (Array.isArray(list) && list.length > 0) {
+              setReviews(list);
+            }
+          }).catch(() => {});
+        }
+      })
+      .catch(() => null)
+      .finally(() => setLoading(false));
   }, [slug]);
 
   const minHours = listing?.minHours || 1;

@@ -93,11 +93,11 @@ export default function CreatorPage() {
   }
 
   async function handleToggleStatus(listing: any) {
-    const newStatus = listing.status === 'active' ? 'inactive' : 'active';
+    const newActive = !listing.active;
     try {
-      await updateListing(listing.id, { status: newStatus });
+      await updateListing(listing.id, { active: newActive });
       setListings((prev) =>
-        prev.map((l) => (l.id === listing.id ? { ...l, status: newStatus } : l))
+        prev.map((l) => (l.id === listing.id ? { ...l, active: newActive } : l))
       );
     } catch (err: any) {
       alert(err.message || 'Failed to update listing');
@@ -333,15 +333,15 @@ export default function CreatorPage() {
                         <td className="px-5 py-4">
                           <span
                             className={`text-xs px-2 py-0.5 rounded-full border ${
-                              listing.status === 'active'
+                              listing.active !== false
                                 ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
                                 : 'bg-gray-500/20 text-gray-400 border-gray-500/30'
                             }`}
                           >
-                            {listing.status || 'active'}
+                            {listing.active !== false ? 'active' : 'inactive'}
                           </span>
                         </td>
-                        <td className="px-5 py-4 text-sm text-white/80">{listing.hourlyRate} SOL/hr</td>
+                        <td className="px-5 py-4 text-sm text-white/80">{listing.hourlyRateSol || listing.hourlyRate} SOL/hr</td>
                         <td className="px-5 py-4 text-sm text-white/80">{listing.totalRentals || 0}</td>
                         <td className="px-5 py-4 text-sm text-purple-400 font-medium">
                           {Number(listing.totalEarnings || 0).toFixed(2)} SOL
@@ -366,9 +366,9 @@ export default function CreatorPage() {
                             <button
                               onClick={() => handleToggleStatus(listing)}
                               className="p-2 rounded-lg glass glass-hover text-white/60 hover:text-white transition-colors"
-                              title={listing.status === 'active' ? 'Deactivate' : 'Activate'}
+                              title={listing.active !== false ? 'Deactivate' : 'Activate'}
                             >
-                              {listing.status === 'active' ? (
+                              {listing.active !== false ? (
                                 <ToggleRight className="w-4 h-4 text-emerald-400" />
                               ) : (
                                 <ToggleLeft className="w-4 h-4" />
@@ -407,12 +407,12 @@ export default function CreatorPage() {
                     className="flex items-center justify-between py-2 border-b border-white/5 last:border-0"
                   >
                     <div>
-                      <p className="text-sm text-white">{rental.agentName || 'Agent'}</p>
+                      <p className="text-sm text-white">{rental.listing?.name || rental.agentName || 'Agent'}</p>
                       <p className="text-xs text-white/40">
                         {new Date(rental.createdAt).toLocaleDateString()} - {rental.hours}h rental
                       </p>
                     </div>
-                    <span className="text-sm text-emerald-400 font-medium">+{rental.amount} SOL</span>
+                    <span className="text-sm text-emerald-400 font-medium">+{rental.amountSol || rental.amount} SOL</span>
                   </div>
                 ))}
               </div>

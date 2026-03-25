@@ -11,7 +11,8 @@ interface AgentCardProps {
     name: string;
     avatarUrl?: string;
     category: string;
-    hourlyRate: number;
+    hourlyRate?: number;
+    hourlyRateSol?: number;
     avgRating: number;
     reviewCount: number;
     totalRentals: number;
@@ -71,7 +72,7 @@ export default function AgentCard({ listing }: AgentCardProps) {
 
         {/* Rate */}
         <div className="flex items-baseline gap-1">
-          <span className="text-lg font-bold text-white">{listing.hourlyRate}</span>
+          <span className="text-lg font-bold text-white">{listing.hourlyRateSol || listing.hourlyRate}</span>
           <span className="text-sm text-white/40">SOL/hr</span>
         </div>
 
