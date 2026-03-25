@@ -20,9 +20,12 @@ async function request<T = any>(
 ): Promise<T> {
   const token = getToken();
   const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
     ...(options.headers as Record<string, string>),
   };
+  // Only set Content-Type for requests with a body
+  if (options.body) {
+    headers['Content-Type'] = 'application/json';
+  }
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
   }
@@ -32,13 +35,20 @@ async function request<T = any>(
     headers,
   });
 
+  if (res.status === 204) return undefined as T;
+
+  const body = await res.json().catch(() => ({}));
+
   if (!res.ok) {
-    const body = await res.json().catch(() => ({}));
     throw new Error(body.error || body.message || `Request failed: ${res.status}`);
   }
 
-  if (res.status === 204) return undefined as T;
-  return res.json();
+  // API wraps responses in { success, data } — unwrap
+  if (body.success && body.data !== undefined) {
+    return body.data as T;
+  }
+
+  return body as T;
 }
 
 // ── Auth ────────────────────────────────────────────────────────
