@@ -81,7 +81,7 @@ export default function DashboardPage() {
   const activeRentals = rentals.filter((r) => r.status === 'active');
   const totalSpent = rentals.reduce((sum, r) => sum + Number(r.totalPaid || r.amountSol || 0), 0);
   const totalHoursRemaining = activeRentals.reduce((sum, r) => {
-    const diff = new Date(r.endTime).getTime() - Date.now();
+    const diff = new Date(r.expiresAt || r.endTime).getTime() - Date.now();
     return sum + Math.max(0, diff / 3600000);
   }, 0);
 
@@ -209,7 +209,18 @@ export default function DashboardPage() {
                 transition={{ delay: i * 0.05 }}
               >
                 <RentalCard
-                  rental={rental}
+                  rental={{
+                    id: rental.id,
+                    agentName: rental.listing?.name || rental.agentName || 'Unknown Agent',
+                    agentAvatar: rental.listing?.avatarUrl || rental.agentAvatar,
+                    status: rental.status,
+                    startTime: rental.startsAt || rental.startTime,
+                    endTime: rental.expiresAt || rental.endTime,
+                    hourlyRate: Number(rental.listing?.hourlyRateSol || rental.hourlyRate || 0),
+                    totalPaid: Number(rental.amountSol || rental.totalPaid || 0),
+                    accessUrl: rental.accessUrl,
+                    listingId: rental.listingId || rental.listing?.id,
+                  }}
                   onExtend={(id) => setExtendModalId(id)}
                   onCancel={(id) => setCancelConfirmId(id)}
                 />
