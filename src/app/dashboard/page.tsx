@@ -79,7 +79,7 @@ export default function DashboardPage() {
 
   const filtered = rentals.filter((r) => tab === 'all' || r.status === tab);
   const activeRentals = rentals.filter((r) => r.status === 'active');
-  const totalSpent = rentals.reduce((sum, r) => sum + (r.totalPaid || 0), 0);
+  const totalSpent = rentals.reduce((sum, r) => sum + Number(r.totalPaid || r.amountSol || 0), 0);
   const totalHoursRemaining = activeRentals.reduce((sum, r) => {
     const diff = new Date(r.endTime).getTime() - Date.now();
     return sum + Math.max(0, diff / 3600000);

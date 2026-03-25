@@ -72,7 +72,7 @@ export default function AgentDetailPage() {
 
   const minHours = listing?.minHours || 1;
   const maxHours = listing?.maxHours || 72;
-  const hourlyRate = listing?.hourlyRate || 0;
+  const hourlyRate = Number(listing?.hourlyRateSol || listing?.hourlyRate || 0);
   const totalCost = (hourlyRate * hours).toFixed(4);
 
   const handleRent = () => {
@@ -132,7 +132,7 @@ export default function AgentDetailPage() {
   const avgRating =
     reviews.length > 0
       ? reviews.reduce((sum: number, r: any) => sum + r.rating, 0) / reviews.length
-      : listing.avgRating || 0;
+      : Number(listing.avgRating || 0);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">

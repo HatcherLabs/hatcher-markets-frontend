@@ -194,8 +194,8 @@ export default function CreatorPage() {
   // Creator Dashboard
   const totalListings = listings.length;
   const totalRentals = earnings?.totalRentals || 0;
-  const totalEarnings = earnings?.totalEarnings || 0;
-  const pendingPayout = earnings?.pendingPayout || 0;
+  const totalEarnings = Number(earnings?.totalEarnings || 0);
+  const pendingPayout = Number(earnings?.pendingPayout || 0);
 
   return (
     <div className="min-h-screen pt-24 pb-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
@@ -344,13 +344,13 @@ export default function CreatorPage() {
                         <td className="px-5 py-4 text-sm text-white/80">{listing.hourlyRate} SOL/hr</td>
                         <td className="px-5 py-4 text-sm text-white/80">{listing.totalRentals || 0}</td>
                         <td className="px-5 py-4 text-sm text-purple-400 font-medium">
-                          {(listing.totalEarnings || 0).toFixed(2)} SOL
+                          {Number(listing.totalEarnings || 0).toFixed(2)} SOL
                         </td>
                         <td className="px-5 py-4">
                           <div className="flex items-center gap-1">
                             <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
                             <span className="text-sm text-white/80">
-                              {listing.avgRating?.toFixed(1) || '-'}
+                              {listing.avgRating ? Number(listing.avgRating).toFixed(1) : '-'}
                             </span>
                           </div>
                         </td>
