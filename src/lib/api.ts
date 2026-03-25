@@ -42,17 +42,17 @@ async function request<T = any>(
 }
 
 // ── Auth ────────────────────────────────────────────────────────
-export async function challenge(walletAddress: string) {
-  return request<{ message: string }>('/auth/challenge', {
+export async function login(email: string, password: string) {
+  return request<{ token: string; user: any }>('/auth/login', {
     method: 'POST',
-    body: JSON.stringify({ walletAddress }),
+    body: JSON.stringify({ email, password }),
   });
 }
 
-export async function verify(walletAddress: string, signature: string, message: string) {
-  return request<{ token: string; user: any }>('/auth/verify', {
+export async function register(email: string, username: string, password: string) {
+  return request<{ token: string; user: any }>('/auth/register', {
     method: 'POST',
-    body: JSON.stringify({ walletAddress, signature, message }),
+    body: JSON.stringify({ email, username, password }),
   });
 }
 

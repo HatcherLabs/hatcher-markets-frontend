@@ -1,128 +1,117 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react';
-import {
-  ConnectionProvider,
-  WalletProvider,
-  useWallet,
-} from '@solana/wallet-adapter-react';
-import { WalletModalProvider } from '@solana/wallet-adapter-react-ui';
-import { PhantomWalletAdapter, SolflareWalletAdapter } from '@solana/wallet-adapter-wallets';
-import { clusterApiUrl } from '@solana/web3.js';
-import { challenge, verify, getProfile, setToken, clearToken } from './api';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
+import { login as apiLogin, register as apiRegister, getProfile, setToken, clearToken } from './api';
 
-import '@solana/wallet-adapter-react-ui/styles.css';
-
-interface AuthState {
-  user: any | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  connect: () => void;
-  disconnect: () => void;
+interface User {
+  id: string;
+  email: string;
+  username: string;
+  displayName: string | null;
+  avatarUrl: string | null;
+  isCreator: boolean;
+  walletAddress?: string | null;
 }
 
-const AuthContext = createContext<AuthState>({
+interface AuthContextValue {
+  user: User | null;
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  error: string | null;
+  login: (email: string, password: string) => Promise<void>;
+  register: (email: string, username: string, password: string) => Promise<void>;
+  logout: () => void;
+  clearError: () => void;
+}
+
+const AuthContext = createContext<AuthContextValue>({
   user: null,
   isAuthenticated: false,
   isLoading: true,
-  connect: () => {},
-  disconnect: () => {},
+  error: null,
+  login: async () => {},
+  register: async () => {},
+  logout: () => {},
+  clearError: () => {},
 });
 
 export const useAuth = () => useContext(AuthContext);
 
-function AuthInner({ children }: { children: React.ReactNode }) {
-  const { publicKey, signMessage, connected, disconnect: walletDisconnect, select, wallets } = useWallet();
-  const [user, setUser] = useState<any>(null);
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [hasAttemptedAuth, setHasAttemptedAuth] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  // On mount, try to load existing session
+  // On mount, check for existing token and load profile
   useEffect(() => {
     const token = typeof window !== 'undefined' ? localStorage.getItem('hatcher_markets_token') : null;
     if (token) {
       getProfile()
-        .then(setUser)
-        .catch(() => clearToken())
+        .then((profile) => setUser(profile))
+        .catch(() => {
+          clearToken();
+        })
         .finally(() => setIsLoading(false));
     } else {
       setIsLoading(false);
     }
   }, []);
 
-  // When wallet connects, auto-authenticate
-  useEffect(() => {
-    if (!connected || !publicKey || !signMessage || hasAttemptedAuth) return;
-
-    const authenticate = async () => {
-      setIsLoading(true);
-      setHasAttemptedAuth(true);
-      try {
-        const addr = publicKey.toBase58();
-        const { message } = await challenge(addr);
-        const encoded = new TextEncoder().encode(message);
-        const signatureBytes = await signMessage(encoded);
-        const signature = Buffer.from(signatureBytes).toString('base64');
-        const { token, user: u } = await verify(addr, signature, message);
-        setToken(token);
-        setUser(u);
-      } catch (err) {
-        console.error('Auth failed:', err);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    authenticate();
-  }, [connected, publicKey, signMessage, hasAttemptedAuth]);
-
-  const connect = useCallback(() => {
-    // Select Phantom by default if available
-    const phantom = wallets.find((w) => w.adapter.name === 'Phantom');
-    if (phantom) {
-      select(phantom.adapter.name);
-    } else if (wallets.length > 0) {
-      select(wallets[0].adapter.name);
+  const login = useCallback(async (email: string, password: string) => {
+    setError(null);
+    setIsLoading(true);
+    try {
+      const { token, user: u } = await apiLogin(email, password);
+      setToken(token);
+      setUser(u);
+    } catch (err: any) {
+      const msg = err.message || 'Login failed';
+      setError(msg);
+      throw err;
+    } finally {
+      setIsLoading(false);
     }
-  }, [wallets, select]);
+  }, []);
 
-  const disconnect = useCallback(() => {
+  const register = useCallback(async (email: string, username: string, password: string) => {
+    setError(null);
+    setIsLoading(true);
+    try {
+      const { token, user: u } = await apiRegister(email, username, password);
+      setToken(token);
+      setUser(u);
+    } catch (err: any) {
+      const msg = err.message || 'Registration failed';
+      setError(msg);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  const logout = useCallback(() => {
     clearToken();
     setUser(null);
-    setHasAttemptedAuth(false);
-    walletDisconnect();
-  }, [walletDisconnect]);
+    setError(null);
+  }, []);
+
+  const clearErrorFn = useCallback(() => {
+    setError(null);
+  }, []);
 
   const value = useMemo(
     () => ({
       user,
       isAuthenticated: !!user,
       isLoading,
-      connect,
-      disconnect,
+      error,
+      login,
+      register,
+      logout,
+      clearError: clearErrorFn,
     }),
-    [user, isLoading, connect, disconnect]
+    [user, isLoading, error, login, register, logout, clearErrorFn]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-}
-
-export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const endpoint = useMemo(() => clusterApiUrl('mainnet-beta'), []);
-  const wallets = useMemo(() => [new PhantomWalletAdapter(), new SolflareWalletAdapter()], []);
-
-  // Cast providers to work around React 18 / wallet-adapter type mismatch
-  const CP = ConnectionProvider as any;
-  const WP = WalletProvider as any;
-  const WMP = WalletModalProvider as any;
-
-  return (
-    <CP endpoint={endpoint}>
-      <WP wallets={wallets} autoConnect>
-        <WMP>
-          <AuthInner>{children}</AuthInner>
-        </WMP>
-      </WP>
-    </CP>
-  );
 }

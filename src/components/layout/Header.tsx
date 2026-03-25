@@ -1,21 +1,41 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
-import { Menu, X, User, LogOut } from 'lucide-react';
-import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
+import { useRouter } from 'next/navigation';
+import { Menu, X, User, LogOut, LayoutDashboard, Settings, Palette, ChevronDown } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 
 export default function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const { user, isAuthenticated, disconnect } = useAuth();
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const { user, isAuthenticated, logout } = useAuth();
+  const router = useRouter();
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setDropdownOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const navLinks = [
     { href: '/agents', label: 'Browse' },
     { href: '/creator', label: 'Creator' },
     { href: '/dashboard', label: 'Dashboard' },
-    { href: '/settings', label: 'Settings' },
   ];
+
+  const handleLogout = () => {
+    logout();
+    setDropdownOpen(false);
+    setMobileOpen(false);
+    router.push('/');
+  };
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 glass border-b border-white/5">
@@ -44,23 +64,75 @@ export default function Header() {
           {/* Desktop Right */}
           <div className="hidden md:flex items-center gap-3">
             {isAuthenticated && user ? (
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg glass">
-                  <User className="w-4 h-4 text-purple-400" />
-                  <span className="text-sm text-white/80">
-                    {user.displayName || user.walletAddress?.slice(0, 6) + '...'}
-                  </span>
-                </div>
+              <div className="relative" ref={dropdownRef}>
                 <button
-                  onClick={disconnect}
-                  className="p-2 rounded-lg glass glass-hover text-white/60 hover:text-white transition-colors"
-                  title="Disconnect"
+                  onClick={() => setDropdownOpen(!dropdownOpen)}
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg glass glass-hover transition-colors"
                 >
-                  <LogOut className="w-4 h-4" />
+                  {user.avatarUrl ? (
+                    <img src={user.avatarUrl} alt="" className="w-6 h-6 rounded-full object-cover" />
+                  ) : (
+                    <User className="w-4 h-4 text-purple-400" />
+                  )}
+                  <span className="text-sm text-white/80">
+                    {user.displayName || user.username || user.email}
+                  </span>
+                  <ChevronDown className={`w-3.5 h-3.5 text-white/40 transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} />
                 </button>
+
+                {/* Dropdown */}
+                {dropdownOpen && (
+                  <div className="absolute right-0 top-full mt-2 w-48 glass rounded-xl border border-white/10 py-1 shadow-xl">
+                    <Link
+                      href="/dashboard"
+                      onClick={() => setDropdownOpen(false)}
+                      className="flex items-center gap-2 px-4 py-2.5 text-sm text-white/60 hover:text-white hover:bg-white/5 transition-colors"
+                    >
+                      <LayoutDashboard className="w-4 h-4" />
+                      Dashboard
+                    </Link>
+                    <Link
+                      href="/creator"
+                      onClick={() => setDropdownOpen(false)}
+                      className="flex items-center gap-2 px-4 py-2.5 text-sm text-white/60 hover:text-white hover:bg-white/5 transition-colors"
+                    >
+                      <Palette className="w-4 h-4" />
+                      Creator
+                    </Link>
+                    <Link
+                      href="/settings"
+                      onClick={() => setDropdownOpen(false)}
+                      className="flex items-center gap-2 px-4 py-2.5 text-sm text-white/60 hover:text-white hover:bg-white/5 transition-colors"
+                    >
+                      <Settings className="w-4 h-4" />
+                      Settings
+                    </Link>
+                    <div className="border-t border-white/5 my-1" />
+                    <button
+                      onClick={handleLogout}
+                      className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-red-400/80 hover:text-red-400 hover:bg-white/5 transition-colors"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      Logout
+                    </button>
+                  </div>
+                )}
               </div>
             ) : (
-              <WalletMultiButton />
+              <div className="flex items-center gap-2">
+                <Link
+                  href="/login"
+                  className="text-sm text-white/60 hover:text-white px-4 py-2 rounded-lg transition-colors"
+                >
+                  Login
+                </Link>
+                <Link
+                  href="/register"
+                  className="btn-primary text-sm !px-4 !py-2"
+                >
+                  Sign Up
+                </Link>
+              </div>
             )}
           </div>
 
@@ -86,20 +158,47 @@ export default function Header() {
                 {link.label}
               </Link>
             ))}
-            <div className="pt-2">
-              {isAuthenticated ? (
-                <button
-                  onClick={() => {
-                    disconnect();
-                    setMobileOpen(false);
-                  }}
-                  className="flex items-center gap-2 text-sm text-white/60 hover:text-white"
-                >
-                  <LogOut className="w-4 h-4" />
-                  Disconnect
-                </button>
+            <div className="pt-2 border-t border-white/5">
+              {isAuthenticated && user ? (
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 px-1 py-2">
+                    <User className="w-4 h-4 text-purple-400" />
+                    <span className="text-sm text-white/80">
+                      {user.displayName || user.username || user.email}
+                    </span>
+                  </div>
+                  <Link
+                    href="/settings"
+                    className="block text-sm text-white/60 hover:text-white py-2"
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    Settings
+                  </Link>
+                  <button
+                    onClick={handleLogout}
+                    className="flex items-center gap-2 text-sm text-red-400/80 hover:text-red-400 py-2"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    Logout
+                  </button>
+                </div>
               ) : (
-                <WalletMultiButton />
+                <div className="flex items-center gap-3 pt-2">
+                  <Link
+                    href="/login"
+                    className="text-sm text-white/60 hover:text-white"
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    Login
+                  </Link>
+                  <Link
+                    href="/register"
+                    className="btn-primary text-sm !px-4 !py-2"
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    Sign Up
+                  </Link>
+                </div>
               )}
             </div>
           </div>

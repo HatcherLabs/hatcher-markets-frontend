@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Activity, DollarSign, Clock, Loader2, ShoppingBag, X } from 'lucide-react';
 import Link from 'next/link';
@@ -12,6 +13,7 @@ type TabFilter = 'all' | 'active' | 'expired' | 'cancelled';
 
 export default function DashboardPage() {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
+  const router = useRouter();
   const [rentals, setRentals] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<TabFilter>('all');
@@ -28,11 +30,11 @@ export default function DashboardPage() {
   useEffect(() => {
     if (authLoading) return;
     if (!isAuthenticated) {
-      setLoading(false);
+      router.push('/login');
       return;
     }
     fetchRentals();
-  }, [isAuthenticated, authLoading]);
+  }, [isAuthenticated, authLoading, router]);
 
   async function fetchRentals() {
     try {
@@ -99,12 +101,7 @@ export default function DashboardPage() {
   }
 
   if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen pt-24 flex flex-col items-center justify-center gap-4 px-4">
-        <h1 className="text-2xl font-bold text-white">Connect your wallet</h1>
-        <p className="text-white/60 text-center">Connect your Solana wallet to view your rentals.</p>
-      </div>
-    );
+    return null; // Will redirect via useEffect
   }
 
   return (

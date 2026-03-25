@@ -64,7 +64,7 @@ body {
   }
 }
 
-/* Solana wallet adapter overrides */
+/* Solana wallet adapter overrides (used in PaymentModal popup) */
 .wallet-adapter-button {
   background: rgba(139, 92, 246, 0.2) !important;
   border: 1px solid rgba(139, 92, 246, 0.3) !important;

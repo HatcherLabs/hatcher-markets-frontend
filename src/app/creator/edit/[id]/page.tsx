@@ -128,12 +128,10 @@ export default function EditListingPage() {
   }
 
   if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen pt-24 flex flex-col items-center justify-center gap-4 px-4">
-        <h1 className="text-2xl font-bold text-white">Connect your wallet</h1>
-        <p className="text-white/60">Connect your Solana wallet to edit a listing.</p>
-      </div>
-    );
+    if (typeof window !== 'undefined') {
+      router.push('/login');
+    }
+    return null;
   }
 
   const colorClass = categoryColors[form.category] || categoryColors.general;

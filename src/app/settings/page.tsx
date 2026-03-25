@@ -1,19 +1,27 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Loader2, Save, User, Wallet, Shield, LogOut } from 'lucide-react';
+import { Loader2, Save, User, Mail, Shield, LogOut } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { updateProfile } from '@/lib/api';
 
 export default function SettingsPage() {
-  const { user, isAuthenticated, isLoading: authLoading, disconnect } = useAuth();
+  const { user, isAuthenticated, isLoading: authLoading, logout } = useAuth();
+  const router = useRouter();
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState('');
 
   const [displayName, setDisplayName] = useState('');
   const [avatarUrl, setAvatarUrl] = useState('');
+
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      router.push('/login');
+    }
+  }, [authLoading, isAuthenticated, router]);
 
   useEffect(() => {
     if (user) {
@@ -40,9 +48,9 @@ export default function SettingsPage() {
     }
   }
 
-  function truncateAddress(addr: string) {
-    if (!addr) return '';
-    return `${addr.slice(0, 6)}...${addr.slice(-4)}`;
+  function handleLogout() {
+    logout();
+    router.push('/');
   }
 
   if (authLoading) {
@@ -54,12 +62,7 @@ export default function SettingsPage() {
   }
 
   if (!isAuthenticated || !user) {
-    return (
-      <div className="min-h-screen pt-24 flex flex-col items-center justify-center gap-4 px-4">
-        <h1 className="text-2xl font-bold text-white">Connect your wallet</h1>
-        <p className="text-white/60 text-center">Connect your Solana wallet to access settings.</p>
-      </div>
-    );
+    return null; // Will redirect via useEffect
   }
 
   return (
@@ -67,6 +70,46 @@ export default function SettingsPage() {
       <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
         <h1 className="text-3xl font-bold text-white mb-2">Settings</h1>
         <p className="text-white/60">Manage your profile and account</p>
+      </motion.div>
+
+      {/* Account Info Section */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.05 }}
+        className="glass rounded-2xl p-6 mb-6"
+      >
+        <div className="flex items-center gap-3 mb-6">
+          <Mail className="w-5 h-5 text-purple-400" />
+          <h2 className="text-lg font-semibold text-white">Account</h2>
+        </div>
+
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm text-white/40 mb-1">Email</label>
+            <p className="text-white font-mono text-sm">{user.email}</p>
+          </div>
+          <div>
+            <label className="block text-sm text-white/40 mb-1">Username</label>
+            <p className="text-white font-mono text-sm">{user.username}</p>
+          </div>
+          {user.walletAddress && (
+            <div>
+              <label className="block text-sm text-white/40 mb-1">Linked Wallet</label>
+              <div className="flex items-center gap-2">
+                <p className="text-white font-mono text-sm">
+                  {user.walletAddress.slice(0, 6)}...{user.walletAddress.slice(-4)}
+                </p>
+                <button
+                  onClick={() => navigator.clipboard.writeText(user.walletAddress!)}
+                  className="text-xs px-2 py-1 rounded-lg glass glass-hover text-white/40 hover:text-white transition-colors"
+                >
+                  Copy
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       </motion.div>
 
       {/* Profile Section */}
@@ -143,43 +186,11 @@ export default function SettingsPage() {
         </div>
       </motion.div>
 
-      {/* Wallet Section */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-        className="glass rounded-2xl p-6 mb-6"
-      >
-        <div className="flex items-center gap-3 mb-6">
-          <Wallet className="w-5 h-5 text-purple-400" />
-          <h2 className="text-lg font-semibold text-white">Wallet</h2>
-        </div>
-
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm text-white/60 mb-1">Connected Address</p>
-            <p className="text-white font-mono">
-              {user.walletAddress ? truncateAddress(user.walletAddress) : 'Not connected'}
-            </p>
-          </div>
-          {user.walletAddress && (
-            <button
-              onClick={() => {
-                navigator.clipboard.writeText(user.walletAddress);
-              }}
-              className="text-xs px-3 py-1.5 rounded-lg glass glass-hover text-white/60 hover:text-white transition-colors"
-            >
-              Copy
-            </button>
-          )}
-        </div>
-      </motion.div>
-
       {/* Creator Status */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3 }}
+        transition={{ delay: 0.2 }}
         className="glass rounded-2xl p-6 mb-6"
       >
         <div className="flex items-center gap-3 mb-4">
@@ -201,17 +212,17 @@ export default function SettingsPage() {
         </div>
       </motion.div>
 
-      {/* Disconnect */}
+      {/* Logout */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.4 }}
+        transition={{ delay: 0.3 }}
       >
         <button
-          onClick={disconnect}
+          onClick={handleLogout}
           className="w-full flex items-center justify-center gap-2 bg-red-600/10 hover:bg-red-600/20 border border-red-500/20 text-red-400 font-medium px-6 py-3 rounded-xl transition-all"
         >
-          <LogOut className="w-4 h-4" /> Disconnect Wallet
+          <LogOut className="w-4 h-4" /> Logout
         </button>
       </motion.div>
     </div>

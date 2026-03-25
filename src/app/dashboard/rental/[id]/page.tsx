@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import {
   ArrowLeft,
@@ -22,6 +22,7 @@ import CountdownTimer from '@/components/CountdownTimer';
 
 export default function RentalDetailPage() {
   const params = useParams();
+  const router = useRouter();
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   const [rental, setRental] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -96,12 +97,10 @@ export default function RentalDetailPage() {
   }
 
   if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen pt-24 flex flex-col items-center justify-center gap-4 px-4">
-        <h1 className="text-2xl font-bold text-white">Connect your wallet</h1>
-        <p className="text-white/60">Connect your Solana wallet to view rental details.</p>
-      </div>
-    );
+    if (typeof window !== 'undefined') {
+      router.push('/login');
+    }
+    return null;
   }
 
   if (!rental) {

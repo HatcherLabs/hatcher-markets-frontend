@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import {
   ArrowLeft,
@@ -14,7 +14,8 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import StarRating from '@/components/StarRating';
-import { getListing, getReviews, createReview, createRental } from '@/lib/api';
+import PaymentModal from '@/components/PaymentModal';
+import { getListing, getReviews, createReview } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
 
 const categoryColors: Record<string, string> = {
@@ -37,6 +38,7 @@ function getInitials(name: string) {
 
 export default function AgentDetailPage() {
   const params = useParams();
+  const router = useRouter();
   const slug = params.slug as string;
   const { isAuthenticated } = useAuth();
 
@@ -44,8 +46,10 @@ export default function AgentDetailPage() {
   const [reviews, setReviews] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [hours, setHours] = useState(1);
-  const [renting, setRenting] = useState(false);
   const [error, setError] = useState('');
+
+  // Payment modal
+  const [paymentModalOpen, setPaymentModalOpen] = useState(false);
 
   // Review form
   const [reviewRating, setReviewRating] = useState(0);
@@ -71,26 +75,18 @@ export default function AgentDetailPage() {
   const hourlyRate = listing?.hourlyRate || 0;
   const totalCost = (hourlyRate * hours).toFixed(4);
 
-  const handleRent = async () => {
+  const handleRent = () => {
     if (!isAuthenticated) {
-      setError('Please connect your wallet first.');
+      router.push('/login');
       return;
     }
-    setRenting(true);
     setError('');
-    try {
-      // In production, this would trigger a Solana transaction first
-      await createRental({
-        listingId: listing.id,
-        hours,
-        txSignature: 'pending', // placeholder
-      });
-      alert('Rental created successfully!');
-    } catch (err: any) {
-      setError(err.message || 'Failed to create rental');
-    } finally {
-      setRenting(false);
-    }
+    setPaymentModalOpen(true);
+  };
+
+  const handlePaymentSuccess = () => {
+    setPaymentModalOpen(false);
+    router.push('/dashboard');
   };
 
   const handleSubmitReview = async () => {
@@ -194,7 +190,8 @@ export default function AgentDetailPage() {
                     by{' '}
                     <span className="text-white/60">
                       {listing.creator.displayName ||
-                        listing.creator.walletAddress?.slice(0, 8) + '...'}
+                        listing.creator.username ||
+                        listing.creator.email}
                     </span>
                   </div>
                 )}
@@ -240,13 +237,14 @@ export default function AgentDetailPage() {
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">
                         <div className="w-8 h-8 rounded-full bg-purple-600/20 flex items-center justify-center text-purple-400 text-xs font-bold">
-                          {(review.user?.displayName || review.user?.walletAddress || 'A')
+                          {(review.user?.displayName || review.user?.username || review.user?.email || 'A')
                             .charAt(0)
                             .toUpperCase()}
                         </div>
                         <span className="text-sm text-white/60">
                           {review.user?.displayName ||
-                            review.user?.walletAddress?.slice(0, 8) + '...'}
+                            review.user?.username ||
+                            review.user?.email}
                         </span>
                       </div>
                       <StarRating rating={review.rating} size={12} />
@@ -263,7 +261,7 @@ export default function AgentDetailPage() {
             )}
 
             {/* Write review */}
-            {isAuthenticated && (
+            {isAuthenticated ? (
               <div className="border-t border-white/5 pt-6">
                 <h3 className="text-sm font-medium text-white/60 mb-3">Write a Review</h3>
                 <div className="space-y-3">
@@ -289,6 +287,15 @@ export default function AgentDetailPage() {
                     {submittingReview ? 'Submitting...' : 'Submit Review'}
                   </button>
                 </div>
+              </div>
+            ) : (
+              <div className="border-t border-white/5 pt-6 text-center">
+                <p className="text-sm text-white/30">
+                  <Link href="/login" className="text-purple-400 hover:text-purple-300 transition-colors">
+                    Login
+                  </Link>{' '}
+                  to write a review.
+                </p>
               </div>
             )}
           </motion.div>
@@ -374,30 +381,29 @@ export default function AgentDetailPage() {
             {/* Rent button */}
             <button
               onClick={handleRent}
-              disabled={renting}
-              className="w-full btn-primary text-base flex items-center justify-center gap-2 disabled:opacity-50"
+              className="w-full btn-primary text-base flex items-center justify-center gap-2"
             >
-              {renting ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Processing...
-                </>
-              ) : (
-                <>
-                  <Clock className="w-4 h-4" />
-                  Rent Now
-                </>
-              )}
+              <Clock className="w-4 h-4" />
+              Rent Now
             </button>
 
             {!isAuthenticated && (
               <p className="text-xs text-white/20 text-center mt-3">
-                Connect your wallet to rent.
+                <Link href="/login" className="text-purple-400 hover:text-purple-300">Login</Link> to rent this agent.
               </p>
             )}
           </motion.div>
         </div>
       </div>
+
+      {/* Payment Modal */}
+      <PaymentModal
+        isOpen={paymentModalOpen}
+        onClose={() => setPaymentModalOpen(false)}
+        listing={listing}
+        hours={hours}
+        onSuccess={handlePaymentSuccess}
+      />
     </div>
   );
 }

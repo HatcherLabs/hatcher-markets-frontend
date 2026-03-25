@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import {
   Loader2,
@@ -30,6 +31,7 @@ import {
 
 export default function CreatorPage() {
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
+  const router = useRouter();
   const [isCreator, setIsCreator] = useState(false);
   const [loading, setLoading] = useState(true);
   const [registering, setRegistering] = useState(false);
@@ -40,7 +42,7 @@ export default function CreatorPage() {
   useEffect(() => {
     if (authLoading) return;
     if (!isAuthenticated) {
-      setLoading(false);
+      router.push('/login');
       return;
     }
     if (user?.isCreator) {
@@ -49,7 +51,7 @@ export default function CreatorPage() {
     } else {
       setLoading(false);
     }
-  }, [isAuthenticated, authLoading, user]);
+  }, [isAuthenticated, authLoading, user, router]);
 
   async function loadCreatorData() {
     try {
@@ -123,12 +125,7 @@ export default function CreatorPage() {
   }
 
   if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen pt-24 flex flex-col items-center justify-center gap-4 px-4">
-        <h1 className="text-2xl font-bold text-white">Connect your wallet</h1>
-        <p className="text-white/60 text-center">Connect your Solana wallet to access the Creator Dashboard.</p>
-      </div>
-    );
+    return null; // Will redirect via useEffect
   }
 
   // Not a creator yet — show CTA

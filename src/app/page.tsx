@@ -46,7 +46,7 @@ const steps = [
   {
     icon: CreditCard,
     title: 'Pay',
-    description: 'Pay hourly in SOL or $HATCH. Connect your wallet and rent instantly.',
+    description: 'Pay hourly in SOL or $HATCH. Sign up and rent instantly.',
   },
   {
     icon: Play,
