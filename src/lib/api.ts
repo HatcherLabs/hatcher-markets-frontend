@@ -115,6 +115,13 @@ export async function createRental(data: { listingId: string; hours: number; txS
   });
 }
 
+export async function createStripeCheckout(data: { listingId: string; hours: number; returnUrl: string }) {
+  return request<{ sessionId: string; url: string }>('/payments/create-checkout', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
 export async function extendRental(id: string, data: { hours: number; txSignature: string }) {
   return request<any>(`/rentals/${id}/extend`, {
     method: 'POST',

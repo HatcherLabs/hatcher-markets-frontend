@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Loader2, Wallet, CreditCard, Coins, CheckCircle } from 'lucide-react';
-import { createRental } from '@/lib/api';
+import { createRental, createStripeCheckout } from '@/lib/api';
 
 interface PaymentModalProps {
   isOpen: boolean;
@@ -14,7 +14,7 @@ interface PaymentModalProps {
 }
 
 export default function PaymentModal({ isOpen, onClose, listing, hours, onSuccess }: PaymentModalProps) {
-  const [step, setStep] = useState<'select' | 'connecting' | 'signing' | 'submitting' | 'success'>('select');
+  const [step, setStep] = useState<'select' | 'connecting' | 'signing' | 'submitting' | 'redirecting' | 'success'>('select');
   const [error, setError] = useState('');
 
   const hourlyRate = listing?.hourlyRate || 0;
@@ -89,6 +89,29 @@ export default function PaymentModal({ isOpen, onClose, listing, hours, onSucces
     }
   }
 
+  async function handlePayWithCard() {
+    setError('');
+    setStep('submitting');
+
+    try {
+      const { url } = await createStripeCheckout({
+        listingId: listing.id,
+        hours,
+        returnUrl: window.location.origin,
+      });
+
+      if (url) {
+        setStep('redirecting');
+        window.location.href = url;
+      } else {
+        throw new Error('No checkout URL returned');
+      }
+    } catch (err: any) {
+      setError(err.message || 'Failed to create checkout session. Please try again.');
+      setStep('select');
+    }
+  }
+
   function handleClose() {
     if (step === 'submitting' || step === 'signing') return; // Don't close during transaction
     setStep('select');
@@ -135,13 +158,14 @@ export default function PaymentModal({ isOpen, onClose, listing, hours, onSucces
             )}
 
             {/* Loading states */}
-            {(step === 'connecting' || step === 'signing' || step === 'submitting') && (
+            {(step === 'connecting' || step === 'signing' || step === 'submitting' || step === 'redirecting') && (
               <div className="text-center py-8">
                 <Loader2 className="w-10 h-10 text-purple-400 animate-spin mx-auto mb-4" />
                 <p className="text-white font-medium">
                   {step === 'connecting' && 'Connecting wallet...'}
                   {step === 'signing' && 'Please sign the transaction in your wallet...'}
                   {step === 'submitting' && 'Processing payment...'}
+                  {step === 'redirecting' && 'Redirecting to Stripe Checkout...'}
                 </p>
               </div>
             )}
@@ -212,20 +236,17 @@ export default function PaymentModal({ isOpen, onClose, listing, hours, onSucces
                   </button>
 
                   <button
-                    disabled
-                    className="w-full flex items-center gap-3 p-4 rounded-xl glass opacity-40 cursor-not-allowed"
+                    onClick={handlePayWithCard}
+                    className="w-full flex items-center gap-3 p-4 rounded-xl glass glass-hover transition-all group"
                   >
                     <div className="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center">
                       <CreditCard className="w-5 h-5 text-blue-400" />
                     </div>
                     <div className="flex-1 text-left">
-                      <p className="text-sm font-medium text-white">
+                      <p className="text-sm font-medium text-white group-hover:text-blue-300 transition-colors">
                         Pay with Card
-                        <span className="ml-2 text-xs text-white/30 bg-white/5 px-2 py-0.5 rounded-full">
-                          Coming soon
-                        </span>
                       </p>
-                      <p className="text-xs text-white/40">Stripe integration</p>
+                      <p className="text-xs text-white/40">~${(parseFloat(totalSol) * 150).toFixed(2)} USD via Stripe</p>
                     </div>
                   </button>
                 </div>
