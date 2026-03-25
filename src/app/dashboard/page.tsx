@@ -52,7 +52,7 @@ export default function DashboardPage() {
     if (!extendModalId) return;
     setExtending(true);
     try {
-      await extendRental(extendModalId, { hours: extendHours, txSignature: 'pending' });
+      await extendRental(extendModalId, { hours: extendHours, paymentTx: `mock-extend-${Date.now()}` });
       setExtendModalId(null);
       setExtendHours(1);
       fetchRentals();

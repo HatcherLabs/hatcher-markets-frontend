@@ -20,12 +20,12 @@ interface AgentCardProps {
 }
 
 const categoryColors: Record<string, string> = {
-  Trading: 'bg-green-500/20 text-green-400',
-  Research: 'bg-blue-500/20 text-blue-400',
-  Support: 'bg-yellow-500/20 text-yellow-400',
-  Creative: 'bg-pink-500/20 text-pink-400',
-  Dev: 'bg-cyan-500/20 text-cyan-400',
-  General: 'bg-purple-500/20 text-purple-400',
+  trading: 'bg-green-500/20 text-green-400',
+  research: 'bg-blue-500/20 text-blue-400',
+  support: 'bg-yellow-500/20 text-yellow-400',
+  creative: 'bg-pink-500/20 text-pink-400',
+  dev: 'bg-cyan-500/20 text-cyan-400',
+  general: 'bg-purple-500/20 text-purple-400',
 };
 
 function getInitials(name: string) {
@@ -38,7 +38,7 @@ function getInitials(name: string) {
 }
 
 export default function AgentCard({ listing }: AgentCardProps) {
-  const colorClass = categoryColors[listing.category] || categoryColors.General;
+  const colorClass = categoryColors[listing.category?.toLowerCase()] || categoryColors.general;
 
   return (
     <Link href={`/agents/${listing.slug}`}>

@@ -43,7 +43,7 @@ export default function PaymentModal({ isOpen, onClose, listing, hours, onSucces
       await createRental({
         listingId: listing.id,
         hours,
-        txSignature: `pending_sol_${walletAddress}_${Date.now()}`,
+        paymentTx: `pending_sol_${walletAddress}_${Date.now()}`,
       });
 
       await phantom.disconnect();
@@ -75,7 +75,8 @@ export default function PaymentModal({ isOpen, onClose, listing, hours, onSucces
       await createRental({
         listingId: listing.id,
         hours,
-        txSignature: `pending_hatch_${walletAddress}_${Date.now()}`,
+        paymentTx: `pending_hatch_${walletAddress}_${Date.now()}`,
+        paymentToken: 'HATCH',
       });
 
       await phantom.disconnect();

@@ -57,7 +57,7 @@ const steps = [
 
 export default function HomePage() {
   const [featured, setFeatured] = useState<any[]>([]);
-  const [stats, setStats] = useState<{ totalAgents: number; totalRentals: number; activeCreators: number } | null>(null);
+  const [stats, setStats] = useState<{ totalListings: number; totalRentals: number; totalCreators: number } | null>(null);
 
   useEffect(() => {
     getFeatured()
@@ -134,19 +134,19 @@ export default function HomePage() {
         >
           <div>
             <div className="text-2xl sm:text-3xl font-bold text-white">
-              {stats ? stats.totalAgents || '--' : '--'}
+              {stats ? stats.totalListings : '--'}
             </div>
             <div className="text-sm text-white/40 mt-1">AI Agents</div>
           </div>
           <div>
             <div className="text-2xl sm:text-3xl font-bold text-white">
-              {stats ? stats.totalRentals || '--' : '--'}
+              {stats ? stats.totalRentals : '--'}
             </div>
             <div className="text-sm text-white/40 mt-1">Total Rentals</div>
           </div>
           <div>
             <div className="text-2xl sm:text-3xl font-bold text-white">
-              {stats ? stats.activeCreators || '--' : '--'}
+              {stats ? stats.totalCreators : '--'}
             </div>
             <div className="text-sm text-white/40 mt-1">Active Creators</div>
           </div>
@@ -205,7 +205,7 @@ export default function HomePage() {
             {categories.map((cat) => {
               const Icon = cat.icon;
               return (
-                <Link key={cat.name} href={`/agents?category=${cat.name}`}>
+                <Link key={cat.name} href={`/agents?category=${cat.name.toLowerCase()}`}>
                   <motion.div
                     whileHover={{ scale: 1.05, y: -2 }}
                     className={`glass glass-hover rounded-xl p-4 text-center bg-gradient-to-b ${cat.color}`}

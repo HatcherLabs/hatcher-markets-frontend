@@ -108,7 +108,7 @@ export async function getMyRentals() {
   return request<any[]>('/rentals');
 }
 
-export async function createRental(data: { listingId: string; hours: number; txSignature: string }) {
+export async function createRental(data: { listingId: string; hours: number; paymentTx: string; paymentToken?: string }) {
   return request<any>('/rentals', {
     method: 'POST',
     body: JSON.stringify(data),
@@ -122,7 +122,7 @@ export async function createStripeCheckout(data: { listingId: string; hours: num
   });
 }
 
-export async function extendRental(id: string, data: { hours: number; txSignature: string }) {
+export async function extendRental(id: string, data: { hours: number; paymentTx: string }) {
   return request<any>(`/rentals/${id}/extend`, {
     method: 'POST',
     body: JSON.stringify(data),
@@ -200,5 +200,5 @@ export async function getCategories() {
 }
 
 export async function getStats() {
-  return request<{ totalAgents: number; totalRentals: number; activeCreators: number }>('/public/stats');
+  return request<{ totalListings: number; totalRentals: number; totalCreators: number }>('/public/stats');
 }

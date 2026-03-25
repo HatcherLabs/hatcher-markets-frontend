@@ -18,7 +18,8 @@ const sortOptions = [
 
 function BrowseAgentsContent() {
   const searchParams = useSearchParams();
-  const initialCategory = searchParams.get('category') || 'All';
+  const rawCategory = searchParams.get('category') || 'All';
+  const initialCategory = categories.find((c) => c.toLowerCase() === rawCategory.toLowerCase()) || 'All';
 
   const [listings, setListings] = useState<any[]>([]);
   const [total, setTotal] = useState(0);

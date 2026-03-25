@@ -77,7 +77,7 @@ export default function RentalDetailPage() {
   async function handleExtend() {
     setExtending(true);
     try {
-      await extendRental(params.id as string, { hours: extendHours, txSignature: 'pending' });
+      await extendRental(params.id as string, { hours: extendHours, paymentTx: `mock-extend-${Date.now()}` });
       setShowExtend(false);
       setExtendHours(1);
       fetchRental();

@@ -193,7 +193,7 @@ export default function CreatorPage() {
 
   // Creator Dashboard
   const totalListings = listings.length;
-  const totalRentals = earnings?.totalRentals || 0;
+  const totalRentals = listings.reduce((sum: number, l: any) => sum + (l.totalRentals || 0), 0);
   const totalEarnings = Number(earnings?.totalEarnings || 0);
   const pendingPayout = Number(earnings?.pendingPayout || 0);
 
