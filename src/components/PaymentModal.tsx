@@ -202,12 +202,12 @@ export default function PaymentModal({ isOpen, onClose, listing, hours, onSucces
                     </div>
                     <div className="flex-1 text-left">
                       <p className="text-sm font-medium text-white group-hover:text-emerald-300 transition-colors">
-                        Pay with $HATCH
+                        Pay with Tokens
                         <span className="ml-2 text-xs text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full">
                           20% off
                         </span>
                       </p>
-                      <p className="text-xs text-white/40">{totalHatch} $HATCH</p>
+                      <p className="text-xs text-white/40">{totalHatch} tokens</p>
                     </div>
                   </button>
 

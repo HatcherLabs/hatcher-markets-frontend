@@ -147,7 +147,10 @@ export default function CreateListingPage() {
                 className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/20 focus:outline-none focus:border-purple-500 transition-colors"
               />
               <p className="text-xs text-white/30 mt-1">
-                The ID of your deployed agent on hatcher.host
+                The ID of your deployed agent on{' '}
+                <a href="https://hatcher.host" target="_blank" rel="noopener noreferrer" className="text-purple-400 hover:text-purple-300 transition-colors">
+                  hatcher.host
+                </a>
               </p>
             </div>
 

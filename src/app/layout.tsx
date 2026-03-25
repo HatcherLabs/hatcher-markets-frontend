@@ -7,7 +7,7 @@ import Footer from '@/components/layout/Footer';
 export const metadata: Metadata = {
   title: 'Hatcher Markets — AI Agent Rental Marketplace',
   description:
-    'Rent AI agents in seconds. Pay with SOL or $HATCH. No setup needed. The premier marketplace for AI agent rentals built on Solana.',
+    'Rent AI agents in seconds. Pay with SOL or platform tokens. No setup needed. The premier marketplace for AI agent rentals built on Solana.',
 };
 
 export default function RootLayout({

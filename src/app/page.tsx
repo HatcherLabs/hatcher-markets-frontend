@@ -46,7 +46,7 @@ const steps = [
   {
     icon: CreditCard,
     title: 'Pay',
-    description: 'Pay hourly in SOL or $HATCH. Sign up and rent instantly.',
+    description: 'Pay hourly in SOL or platform tokens. Sign up and rent instantly.',
   },
   {
     icon: Play,
@@ -57,7 +57,7 @@ const steps = [
 
 export default function HomePage() {
   const [featured, setFeatured] = useState<any[]>([]);
-  const [stats, setStats] = useState({ totalAgents: 42, totalRentals: 156, activeCreators: 12 });
+  const [stats, setStats] = useState<{ totalAgents: number; totalRentals: number; activeCreators: number } | null>(null);
 
   useEffect(() => {
     getFeatured()
@@ -104,7 +104,7 @@ export default function HomePage() {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="mt-6 text-lg text-white/50 max-w-xl mx-auto"
           >
-            Pay with SOL or $HATCH. No setup needed. Browse, rent, and use AI agents from top
+            Pay with SOL or platform tokens. No setup needed. Browse, rent, and use AI agents from top
             creators instantly.
           </motion.p>
 
@@ -133,15 +133,21 @@ export default function HomePage() {
           className="glass rounded-2xl p-6 grid grid-cols-3 gap-4 text-center"
         >
           <div>
-            <div className="text-2xl sm:text-3xl font-bold text-white">{stats.totalAgents}</div>
+            <div className="text-2xl sm:text-3xl font-bold text-white">
+              {stats ? stats.totalAgents || '--' : '--'}
+            </div>
             <div className="text-sm text-white/40 mt-1">AI Agents</div>
           </div>
           <div>
-            <div className="text-2xl sm:text-3xl font-bold text-white">{stats.totalRentals}</div>
+            <div className="text-2xl sm:text-3xl font-bold text-white">
+              {stats ? stats.totalRentals || '--' : '--'}
+            </div>
             <div className="text-sm text-white/40 mt-1">Total Rentals</div>
           </div>
           <div>
-            <div className="text-2xl sm:text-3xl font-bold text-white">{stats.activeCreators}</div>
+            <div className="text-2xl sm:text-3xl font-bold text-white">
+              {stats ? stats.activeCreators || '--' : '--'}
+            </div>
             <div className="text-sm text-white/40 mt-1">Active Creators</div>
           </div>
         </motion.div>
@@ -172,19 +178,15 @@ export default function HomePage() {
               ))}
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-              {/* Placeholder cards */}
-              {Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="glass rounded-2xl p-5 h-40 animate-pulse">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-xl bg-white/5" />
-                    <div className="flex-1 space-y-2">
-                      <div className="h-4 w-24 bg-white/5 rounded" />
-                      <div className="h-3 w-16 bg-white/5 rounded" />
-                    </div>
-                  </div>
-                </div>
-              ))}
+            <div className="glass rounded-2xl p-12 text-center">
+              <Bot className="w-12 h-12 text-white/20 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-white mb-2">No agents listed yet</h3>
+              <p className="text-white/40 text-sm mb-6">
+                Be the first creator to list an agent on the marketplace!
+              </p>
+              <Link href="/creator" className="btn-primary inline-flex items-center gap-2">
+                List Your Agent <ArrowRight className="w-4 h-4" />
+              </Link>
             </div>
           )}
         </motion.div>

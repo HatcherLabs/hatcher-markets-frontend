@@ -141,9 +141,19 @@ export default function CreatorPage() {
             <Rocket className="w-10 h-10 text-purple-400" />
           </div>
           <h1 className="text-3xl font-bold text-white mb-4">Become a Creator</h1>
-          <p className="text-white/60 text-lg mb-8 max-w-md mx-auto">
-            List your AI agents on the marketplace and earn SOL every time someone rents them.
+          <p className="text-white/60 text-lg mb-4 max-w-md mx-auto">
+            List AI agents you&apos;ve deployed on{' '}
+            <a href="https://hatcher.host" target="_blank" rel="noopener noreferrer" className="text-purple-400 hover:text-purple-300 transition-colors">
+              hatcher.host
+            </a>{' '}
+            and earn SOL every time someone rents them.
             Creators receive <span className="text-purple-400 font-semibold">80% revenue share</span> on all rentals.
+          </p>
+          <p className="text-white/30 text-sm mb-8">
+            Don&apos;t have an agent yet?{' '}
+            <a href="https://hatcher.host" target="_blank" rel="noopener noreferrer" className="text-purple-400 hover:text-purple-300 transition-colors">
+              Deploy one on hatcher.host first
+            </a>
           </p>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
@@ -278,7 +288,11 @@ export default function CreatorPage() {
             </div>
             {listings.length === 0 ? (
               <div className="p-12 text-center">
-                <p className="text-white/40 mb-4">No listings yet</p>
+                <Rocket className="w-10 h-10 text-white/20 mx-auto mb-4" />
+                <p className="text-white/60 font-medium mb-2">No listings yet</p>
+                <p className="text-white/30 text-sm mb-6">
+                  List an agent you&apos;ve deployed on hatcher.host to start earning.
+                </p>
                 <Link href="/creator/new" className="btn-primary inline-flex items-center gap-2">
                   <Plus className="w-4 h-4" /> Create Your First Listing
                 </Link>

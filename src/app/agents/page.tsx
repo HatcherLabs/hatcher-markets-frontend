@@ -4,6 +4,7 @@ import { Suspense, useEffect, useState, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Search, SlidersHorizontal, Loader2 } from 'lucide-react';
+import Link from 'next/link';
 import AgentCard from '@/components/AgentCard';
 import { getListings } from '@/lib/api';
 
@@ -173,9 +174,16 @@ function BrowseAgentsContent() {
         <div className="text-center py-20">
           <SlidersHorizontal className="w-12 h-12 text-white/10 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-white/40">No agents found</h3>
-          <p className="text-sm text-white/20 mt-1">
-            Try adjusting your search or filters.
+          <p className="text-sm text-white/20 mt-2 mb-6">
+            {search || category !== 'All'
+              ? 'Try adjusting your search or filters.'
+              : 'The marketplace is brand new — be the first to list an agent!'}
           </p>
+          {!search && category === 'All' && (
+            <Link href="/creator" className="btn-primary inline-flex items-center gap-2 text-sm">
+              List Your Agent
+            </Link>
+          )}
         </div>
       )}
     </div>
