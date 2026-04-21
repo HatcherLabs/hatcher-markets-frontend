@@ -28,8 +28,12 @@ export default function NewAgentPage() {
   });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
-  const [created, setCreated] = useState<{ agent: any; apiKey: string } | null>(null);
-  const [copied, setCopied] = useState(false);
+  const [created, setCreated] = useState<{
+    agent: any;
+    apiKey: string;
+    webhookSecret?: string | null;
+  } | null>(null);
+  const [copied, setCopied] = useState<null | 'apiKey' | 'webhookSecret'>(null);
 
   useEffect(() => {
     if (authLoading) return;
@@ -63,6 +67,9 @@ export default function NewAgentPage() {
             Save this API key somewhere safe — we will never show it again.
           </p>
 
+          <p className="text-xs text-white/60 mb-2">
+            <code className="font-mono">HATCHER_MARKETS_API_KEY</code>
+          </p>
           <div className="glass rounded-xl p-4 flex items-center gap-3 mb-6">
             <code className="flex-1 text-sm text-purple-300 font-mono break-all">
               {created.apiKey}
@@ -70,18 +77,54 @@ export default function NewAgentPage() {
             <button
               onClick={() => {
                 navigator.clipboard.writeText(created.apiKey);
-                setCopied(true);
-                setTimeout(() => setCopied(false), 2000);
+                setCopied('apiKey');
+                setTimeout(() => setCopied(null), 2000);
               }}
               className="text-white/60 hover:text-white transition-colors"
             >
-              {copied ? <Check className="w-5 h-5 text-emerald-400" /> : <Copy className="w-5 h-5" />}
+              {copied === 'apiKey' ? (
+                <Check className="w-5 h-5 text-emerald-400" />
+              ) : (
+                <Copy className="w-5 h-5" />
+              )}
             </button>
           </div>
 
+          {created.webhookSecret && (
+            <>
+              <p className="text-xs text-white/60 mb-2">
+                <code className="font-mono">HATCHER_MARKETS_WEBHOOK_SECRET</code>
+              </p>
+              <div className="glass rounded-xl p-4 flex items-center gap-3 mb-6">
+                <code className="flex-1 text-sm text-cyan-300 font-mono break-all">
+                  {created.webhookSecret}
+                </code>
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(created.webhookSecret!);
+                    setCopied('webhookSecret');
+                    setTimeout(() => setCopied(null), 2000);
+                  }}
+                  className="text-white/60 hover:text-white transition-colors"
+                >
+                  {copied === 'webhookSecret' ? (
+                    <Check className="w-5 h-5 text-emerald-400" />
+                  ) : (
+                    <Copy className="w-5 h-5" />
+                  )}
+                </button>
+              </div>
+              <p className="text-xs text-white/40 mb-6">
+                Verify inbound webhooks with HMAC-SHA256 on the raw body using this secret.
+                Signature lands in <code className="font-mono">X-Hatcher-Signature</code>.
+              </p>
+            </>
+          )}
+
           <p className="text-xs text-white/40 mb-6">
-            Configure your agent runtime with <code className="font-mono">HATCHER_MARKETS_API_KEY</code>
-            . The skill SDK (coming soon) will auto-bid on tasks matching your categories.
+            Configure your agent runtime with these env vars. The SDK (
+            <code className="font-mono">@hatcher/markets-sdk</code>) polls or receives webhook
+            events for tasks matching your categories.
           </p>
 
           <div className="flex gap-3">

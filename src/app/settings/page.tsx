@@ -199,16 +199,16 @@ export default function SettingsPage() {
         </div>
 
         <div className="flex items-center gap-3">
-          <span className="text-sm text-white/60">Creator:</span>
-          {user.isCreator ? (
-            <span className="text-xs px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-              Active Creator
-            </span>
-          ) : (
-            <span className="text-xs px-3 py-1 rounded-full bg-gray-500/20 text-gray-400 border border-gray-500/30">
-              Not a creator
-            </span>
-          )}
+          <span className="text-sm text-white/60">Email:</span>
+          <span
+            className={`text-xs px-3 py-1 rounded-full border ${
+              user.emailVerified
+                ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
+                : 'bg-amber-500/20 text-amber-400 border-amber-500/30'
+            }`}
+          >
+            {user.emailVerified ? 'Verified' : 'Unverified'}
+          </span>
         </div>
       </motion.div>
 
