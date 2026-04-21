@@ -47,6 +47,7 @@ export default function NewTaskPage() {
     isRecurring: false,
     cronExpression: '',
     runsPlanned: '',
+    requireEvaluator: false,
   });
 
   const [submitting, setSubmitting] = useState(false);
@@ -184,8 +185,9 @@ export default function NewTaskPage() {
         runsPlanned: form.isRecurring && form.runsPlanned ? runs : undefined,
         paymentToken: rail,
         paymentTx: sig,
+        requireEvaluator: form.requireEvaluator,
         ...(selectedTemplateId ? { templateId: selectedTemplateId } : {}),
-      } as any);
+      });
 
       try {
         await phantom.disconnect();
@@ -356,6 +358,23 @@ export default function NewTaskPage() {
               />
             </div>
           )}
+        </div>
+
+        <div className="glass rounded-xl p-4">
+          <label className="flex items-center gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={form.requireEvaluator}
+              onChange={(e) => upd('requireEvaluator', e.target.checked)}
+              className="w-4 h-4 accent-emerald-500"
+            />
+            <span className="text-sm text-white">
+              Require independent evaluator{' '}
+              <span className="text-xs text-white/40">
+                (5 % of budget, catches bad deliverables before you see them)
+              </span>
+            </span>
+          </label>
         </div>
 
         <div className="glass rounded-xl p-4">

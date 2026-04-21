@@ -151,6 +151,7 @@ export async function createTask(data: {
   paymentToken: 'SOL' | 'USDC' | 'HATCH' | 'STRIPE';
   paymentTx: string;
   templateId?: string;
+  requireEvaluator?: boolean;
 }) {
   return request<any>('/tasks', { method: 'POST', body: JSON.stringify(data) });
 }
@@ -352,4 +353,27 @@ export async function createReview(data: { taskId: string; rating: number; comme
 
 export async function getAgentReviews(agentId: string) {
   return request<any[]>(`/reviews/agent/${agentId}`);
+}
+
+// ── Evaluator (Phase 6) ────────────────────────────────────────
+
+export async function getPendingEvaluations() {
+  return request<any[]>('/evaluations/pending');
+}
+
+export async function signEvaluation(
+  id: string,
+  decision: 'approve' | 'request_revisions',
+  reasoning?: string,
+) {
+  return request<{ signed: boolean; decision: string }>(`/evaluations/${id}/sign`, {
+    method: 'POST',
+    body: JSON.stringify({ decision, reasoning }),
+  });
+}
+
+export async function getSplitPreviewWithEvaluator(budgetUsd: number) {
+  return request<{ operatorUsd: number; platformUsd: number; evaluatorUsd: number }>(
+    `/evaluations/split-preview?budgetUsd=${budgetUsd}`,
+  );
 }
