@@ -83,6 +83,11 @@ export async function getFeaturedAgents() {
   return request<any[]>('/public/featured-agents');
 }
 
+export async function getTaskTemplates(category?: string) {
+  const q = category ? `?category=${encodeURIComponent(category)}` : '';
+  return request<any[]>(`/public/task-templates${q}`);
+}
+
 export interface PriceHint {
   category: string;
   isRecurring: boolean;
@@ -145,6 +150,7 @@ export async function createTask(data: {
   runsPlanned?: number;
   paymentToken: 'SOL' | 'USDC' | 'HATCH' | 'STRIPE';
   paymentTx: string;
+  templateId?: string;
 }) {
   return request<any>('/tasks', { method: 'POST', body: JSON.stringify(data) });
 }

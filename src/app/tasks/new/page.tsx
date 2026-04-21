@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 import { Connection, PublicKey } from '@solana/web3.js';
 import { useAuth } from '@/lib/auth-context';
-import { createTask, getPriceHint, type PriceHint } from '@/lib/api';
+import { createTask, getPriceHint, getTaskTemplates, type PriceHint } from '@/lib/api';
 import { CATEGORIES } from '@/lib/categories';
 import { payRail, type CryptoRail } from '@/lib/solana-pay';
 
@@ -53,6 +53,8 @@ export default function NewTaskPage() {
   const [error, setError] = useState('');
   const [step, setStep] = useState<'form' | 'paying' | 'submitting'>('form');
   const [priceHint, setPriceHint] = useState<PriceHint | null>(null);
+  const [templates, setTemplates] = useState<any[]>([]);
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string>('');
 
   // Fetch price hint whenever the (category, isRecurring) pair changes.
   useEffect(() => {
@@ -68,6 +70,36 @@ export default function NewTaskPage() {
       cancelled = true;
     };
   }, [form.category, form.isRecurring]);
+
+  // Templates for the current category.
+  useEffect(() => {
+    let cancelled = false;
+    getTaskTemplates(form.category)
+      .then((ts) => {
+        if (!cancelled) setTemplates(ts || []);
+      })
+      .catch(() => {
+        if (!cancelled) setTemplates([]);
+      });
+    setSelectedTemplateId('');
+    return () => {
+      cancelled = true;
+    };
+  }, [form.category]);
+
+  function applyTemplate(id: string) {
+    setSelectedTemplateId(id);
+    if (!id) return;
+    const tpl = templates.find((t) => t.id === id);
+    if (!tpl) return;
+    setForm((p) => ({
+      ...p,
+      title: p.title || tpl.name,
+      description: p.description || tpl.descriptionHint || '',
+      deliverableType: tpl.defaultDeliverable || p.deliverableType,
+      budgetUsd: p.budgetUsd || String(tpl.defaultPriceUsd),
+    }));
+  }
 
   if (authLoading) {
     return (
@@ -152,7 +184,8 @@ export default function NewTaskPage() {
         runsPlanned: form.isRecurring && form.runsPlanned ? runs : undefined,
         paymentToken: rail,
         paymentTx: sig,
-      });
+        ...(selectedTemplateId ? { templateId: selectedTemplateId } : {}),
+      } as any);
 
       try {
         await phantom.disconnect();
@@ -196,6 +229,29 @@ export default function NewTaskPage() {
       )}
 
       <div className="glass rounded-2xl p-6 space-y-5">
+        {templates.length > 0 && (
+          <div>
+            <label className="block text-sm text-white/60 mb-2">
+              Use a template{' '}
+              <span className="text-white/40">(structured deliverable, auto-validated)</span>
+            </label>
+            <select
+              value={selectedTemplateId}
+              onChange={(e) => applyTemplate(e.target.value)}
+              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-purple-500"
+            >
+              <option value="" className="bg-[#1a0b2e]">
+                Free-form task
+              </option>
+              {templates.map((t) => (
+                <option key={t.id} value={t.id} className="bg-[#1a0b2e]">
+                  {t.name} — ${Number(t.defaultPriceUsd).toFixed(2)} suggested
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+
         <div>
           <label className="block text-sm text-white/60 mb-2">Title</label>
           <input
