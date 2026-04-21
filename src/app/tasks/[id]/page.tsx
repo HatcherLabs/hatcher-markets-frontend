@@ -26,6 +26,7 @@ import {
   rejectDeliverable,
   cancelTask,
   openDispute,
+  createReview,
 } from '@/lib/api';
 import { getCategoryEmoji, getCategoryLabel } from '@/lib/categories';
 
@@ -53,7 +54,19 @@ export default function TaskDetailPage() {
   const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState('');
 
+  // Review form state (client-side only — we trust the 409 on dup)
+  const [reviewRating, setReviewRating] = useState(0);
+  const [reviewComment, setReviewComment] = useState('');
+  const [reviewSubmitted, setReviewSubmitted] = useState(false);
+  const [reviewBusy, setReviewBusy] = useState(false);
+
   const isOwner = isAuthenticated && task && task.client?.username === user?.username;
+  const canReview =
+    isOwner &&
+    task &&
+    ['paid', 'approved'].includes(task.status) &&
+    task.assignedAgent &&
+    !reviewSubmitted;
 
   async function refresh() {
     try {
@@ -134,6 +147,29 @@ export default function TaskDetailPage() {
       setError(e.message || 'Failed to cancel');
     } finally {
       setActionLoading(false);
+    }
+  }
+
+  async function handleSubmitReview() {
+    if (!reviewRating) return;
+    setReviewBusy(true);
+    setError('');
+    try {
+      await createReview({
+        taskId: id,
+        rating: reviewRating,
+        comment: reviewComment.trim() || undefined,
+      });
+      setReviewSubmitted(true);
+    } catch (e: any) {
+      // 409 means we already reviewed — treat as success so the form hides
+      if (/already/i.test(e?.message || '')) {
+        setReviewSubmitted(true);
+      } else {
+        setError(e.message || 'Failed to submit review');
+      }
+    } finally {
+      setReviewBusy(false);
     }
   }
 
@@ -305,6 +341,67 @@ export default function TaskDetailPage() {
               </div>
             ))}
           </div>
+        </div>
+      )}
+
+      {canReview && (
+        <div className="glass rounded-2xl p-6 mb-6">
+          <h2 className="text-lg font-semibold text-white mb-1">
+            Rate {task.assignedAgent?.name}
+          </h2>
+          <p className="text-sm text-white/50 mb-4">
+            Your review shapes the agent's public rating.
+          </p>
+
+          <div className="flex items-center gap-2 mb-4">
+            {[1, 2, 3, 4, 5].map((n) => (
+              <button
+                key={n}
+                onClick={() => setReviewRating(n)}
+                onMouseEnter={() => setReviewRating(n)}
+                className="text-3xl transition-transform hover:scale-110"
+              >
+                <span className={n <= reviewRating ? 'text-amber-400' : 'text-white/20'}>
+                  ★
+                </span>
+              </button>
+            ))}
+            <span className="ml-3 text-sm text-white/50">
+              {reviewRating > 0 ? `${reviewRating} / 5` : 'Pick a rating'}
+            </span>
+          </div>
+
+          <textarea
+            value={reviewComment}
+            onChange={(e) => setReviewComment(e.target.value.slice(0, 1000))}
+            rows={3}
+            placeholder="Optional — a short note about the work"
+            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/20 focus:outline-none focus:border-purple-500 resize-none mb-4"
+          />
+
+          <button
+            onClick={handleSubmitReview}
+            disabled={!reviewRating || reviewBusy}
+            className="btn-primary text-sm disabled:opacity-50"
+          >
+            {reviewBusy ? 'Submitting…' : 'Submit review'}
+          </button>
+        </div>
+      )}
+
+      {reviewSubmitted && (
+        <div className="glass rounded-2xl p-6 mb-6 flex items-center gap-3">
+          <CheckCircle className="w-5 h-5 text-emerald-400 shrink-0" />
+          <p className="text-sm text-white/70">
+            Review submitted. It now contributes to{' '}
+            <Link
+              href={`/agents/${task.assignedAgent?.slug}`}
+              className="text-purple-400 hover:text-purple-300"
+            >
+              {task.assignedAgent?.name}'s public rating
+            </Link>
+            .
+          </p>
         </div>
       )}
 
