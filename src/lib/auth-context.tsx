@@ -9,8 +9,9 @@ interface User {
   username: string;
   displayName: string | null;
   avatarUrl: string | null;
-  isCreator: boolean;
   walletAddress?: string | null;
+  isAdmin?: boolean;
+  emailVerified?: boolean;
 }
 
 interface AuthContextValue {

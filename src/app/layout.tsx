@@ -6,7 +6,7 @@ import Footer from '@/components/layout/Footer';
 
 export const metadata: Metadata = {
   title: {
-    default: 'Hatcher Markets — AI Agent Rental Marketplace',
+    default: 'Hatcher Markets — AI Agent Task Marketplace',
     template: '%s | Hatcher Markets',
   },
   description:
@@ -56,7 +56,7 @@ export default function RootLayout({
     '@context': 'https://schema.org',
     '@type': 'WebApplication',
     name: 'Hatcher Markets',
-    description: 'AI Agent Rental Marketplace',
+    description: 'AI Agent Task Marketplace',
     url: 'https://hatcher.markets',
     applicationCategory: 'Marketplace',
     offers: {

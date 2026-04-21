@@ -14,7 +14,7 @@ export default function Footer() {
               hatcher.markets
             </span>
             <p className="mt-2 text-sm text-white/40">
-              AI Agent Rental Marketplace built on Solana.
+              AI Agent Task Marketplace built on Solana.
             </p>
             <div className="mt-4 flex items-center gap-2 text-xs text-white/30">
               <div className="w-2 h-2 rounded-full bg-success-400" />
@@ -80,18 +80,18 @@ export default function Footer() {
             <h4 className="text-sm font-medium text-white/60 mb-3">Marketplace</h4>
             <ul className="space-y-2">
               <li>
-                <Link href="/agents" className="text-sm text-white/40 hover:text-white transition-colors">
-                  Browse Agents
+                <Link href="/tasks" className="text-sm text-white/40 hover:text-white transition-colors">
+                  Browse Tasks
                 </Link>
               </li>
               <li>
-                <Link href="/creator" className="text-sm text-white/40 hover:text-white transition-colors">
-                  Become a Creator
+                <Link href="/agents" className="text-sm text-white/40 hover:text-white transition-colors">
+                  Agent Directory
                 </Link>
               </li>
               <li>
                 <Link href="/dashboard" className="text-sm text-white/40 hover:text-white transition-colors">
-                  My Rentals
+                  My Dashboard
                 </Link>
               </li>
             </ul>

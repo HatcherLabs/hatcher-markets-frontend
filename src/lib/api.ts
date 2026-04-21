@@ -1,3 +1,5 @@
+// hatcher.markets API client — v2 task marketplace.
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002';
 const TOKEN_KEY = 'hatcher_markets_token';
 
@@ -14,55 +16,44 @@ export function clearToken() {
   localStorage.removeItem(TOKEN_KEY);
 }
 
-async function request<T = any>(
-  path: string,
-  options: RequestInit = {}
-): Promise<T> {
+async function request<T = any>(path: string, options: RequestInit = {}): Promise<T> {
   const token = getToken();
-  const headers: Record<string, string> = {
-    ...(options.headers as Record<string, string>),
-  };
-  // Only set Content-Type for requests with a body
-  if (options.body) {
-    headers['Content-Type'] = 'application/json';
-  }
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
-  }
+  const headers: Record<string, string> = { ...(options.headers as Record<string, string>) };
+  if (options.body) headers['Content-Type'] = 'application/json';
+  if (token) headers['Authorization'] = `Bearer ${token}`;
 
-  const res = await fetch(`${API_URL}${path}`, {
-    ...options,
-    headers,
-  });
-
+  const res = await fetch(`${API_URL}${path}`, { ...options, headers });
   if (res.status === 204) return undefined as T;
-
   const body = await res.json().catch(() => ({}));
 
+  if (res.status === 401 && token) clearToken();
+  if (res.status === 429) {
+    throw new Error(body.error || 'Too many requests — slow down.');
+  }
   if (!res.ok) {
     throw new Error(body.error || body.message || `Request failed: ${res.status}`);
   }
-
-  // API wraps responses in { success, data } — unwrap
-  if (body.success && body.data !== undefined) {
-    return body.data as T;
-  }
-
+  if (body.success && body.data !== undefined) return body.data as T;
   return body as T;
 }
 
+function normalizeEmail(email: string): string {
+  return email.trim().toLowerCase();
+}
+
 // ── Auth ────────────────────────────────────────────────────────
+
 export async function login(email: string, password: string) {
   return request<{ token: string; user: any }>('/auth/login', {
     method: 'POST',
-    body: JSON.stringify({ email, password }),
+    body: JSON.stringify({ email: normalizeEmail(email), password }),
   });
 }
 
 export async function register(email: string, username: string, password: string) {
   return request<{ token: string; user: any }>('/auth/register', {
     method: 'POST',
-    body: JSON.stringify({ email, username, password }),
+    body: JSON.stringify({ email: normalizeEmail(email), username, password }),
   });
 }
 
@@ -70,135 +61,319 @@ export async function getProfile() {
   return request<any>('/auth/me');
 }
 
-export async function updateProfile(data: { displayName?: string; avatarUrl?: string; bio?: string }) {
-  return request<any>('/auth/me', {
-    method: 'PATCH',
-    body: JSON.stringify(data),
-  });
-}
-
-export async function logout() {
-  clearToken();
-}
-
-// ── Listings (public) ───────────────────────────────────────────
-export async function getListings(params?: {
-  category?: string;
-  sort?: string;
-  search?: string;
-  page?: number;
-  limit?: number;
+export async function updateProfile(data: {
+  displayName?: string;
+  avatarUrl?: string;
+  walletAddress?: string;
 }) {
-  const query = new URLSearchParams();
-  if (params?.category) query.set('category', params.category);
-  if (params?.sort) query.set('sort', params.sort);
-  if (params?.search) query.set('search', params.search);
-  if (params?.page) query.set('page', String(params.page));
-  if (params?.limit) query.set('limit', String(params.limit));
-  const qs = query.toString();
-  return request<any>(`/listings${qs ? `?${qs}` : ''}`);
-}
-
-export async function getListing(slug: string) {
-  return request<any>(`/listings/${slug}`);
-}
-
-// ── Rentals ─────────────────────────────────────────────────────
-export async function getMyRentals() {
-  return request<any[]>('/rentals');
-}
-
-export async function createRental(data: { listingId: string; hours: number; paymentTx: string; paymentToken?: string }) {
-  return request<any>('/rentals', {
-    method: 'POST',
-    body: JSON.stringify(data),
-  });
-}
-
-export async function createStripeCheckout(data: { listingId: string; hours: number; returnUrl: string }) {
-  return request<{ sessionId: string; url: string }>('/payments/create-checkout', {
-    method: 'POST',
-    body: JSON.stringify(data),
-  });
-}
-
-export async function extendRental(id: string, data: { hours: number; paymentTx: string }) {
-  return request<any>(`/rentals/${id}/extend`, {
-    method: 'POST',
-    body: JSON.stringify(data),
-  });
-}
-
-export async function cancelRental(id: string) {
-  return request<any>(`/rentals/${id}/cancel`, {
-    method: 'POST',
-  });
-}
-
-export async function getRental(id: string) {
-  return request<any>(`/rentals/${id}`);
-}
-
-// ── Reviews ─────────────────────────────────────────────────────
-export async function getReviews(listingId: string) {
-  return request<any>(`/reviews/${listingId}`);
-}
-
-export async function createReview(data: { listingId: string; rating: number; comment: string }) {
-  return request<any>('/reviews', {
-    method: 'POST',
-    body: JSON.stringify(data),
-  });
-}
-
-export async function deleteReview(id: string) {
-  return request<void>(`/reviews/${id}`, { method: 'DELETE' });
-}
-
-// ── Creator ─────────────────────────────────────────────────────
-export async function registerAsCreator() {
-  return request<any>('/creator/register', { method: 'POST' });
-}
-
-export async function getCreatorListings() {
-  return request<any[]>('/creator/listings');
-}
-
-export async function createListing(data: any) {
-  return request<any>('/creator/listings', {
-    method: 'POST',
-    body: JSON.stringify(data),
-  });
-}
-
-export async function updateListing(id: string, data: any) {
-  return request<any>(`/creator/listings/${id}`, {
-    method: 'PATCH',
-    body: JSON.stringify(data),
-  });
-}
-
-export async function deleteListing(id: string) {
-  return request<void>(`/creator/listings/${id}`, { method: 'DELETE' });
-}
-
-export async function getCreatorEarnings() {
-  return request<any>('/creator/earnings');
-}
-
-export async function requestPayout() {
-  return request<any>('/creator/payout', { method: 'POST' });
+  return request<any>('/auth/me', { method: 'PATCH', body: JSON.stringify(data) });
 }
 
 // ── Public ──────────────────────────────────────────────────────
-export async function getFeatured() {
-  return request<any[]>('/public/featured');
+
+export async function getStats() {
+  return request<{ openTasks: number; totalAgents: number; activeOperators: number }>('/public/stats');
 }
 
 export async function getCategories() {
-  return request<any[]>('/public/categories');
+  return request<Array<{ id: string; label: string; emoji: string }>>('/public/categories');
 }
 
-export async function getStats() {
-  return request<{ totalListings: number; totalRentals: number; totalCreators: number }>('/public/stats');
+export async function getFeaturedAgents() {
+  return request<any[]>('/public/featured-agents');
+}
+
+export async function getTaskTemplates(category?: string) {
+  const q = category ? `?category=${encodeURIComponent(category)}` : '';
+  return request<any[]>(`/public/task-templates${q}`);
+}
+
+export interface PriceHint {
+  category: string;
+  isRecurring: boolean;
+  sampleSize: number;
+  p25: number;
+  median: number;
+  p75: number;
+  min: number;
+  max: number;
+}
+
+export async function getPriceHint(
+  category: string,
+  isRecurring: boolean,
+): Promise<PriceHint | null> {
+  const q = new URLSearchParams({ category, isRecurring: String(isRecurring) });
+  return request<PriceHint | null>(`/public/price-hint?${q.toString()}`);
+}
+
+// ── Tasks ───────────────────────────────────────────────────────
+
+export interface TaskListQuery {
+  page?: number;
+  limit?: number;
+  category?: string;
+  search?: string;
+  status?: string;
+  minBudget?: number;
+  maxBudget?: number;
+}
+
+export async function listTasks(params?: TaskListQuery) {
+  const q = new URLSearchParams();
+  Object.entries(params || {}).forEach(([k, v]) => {
+    if (v !== undefined && v !== null && v !== '') q.set(k, String(v));
+  });
+  const qs = q.toString();
+  return request<{ tasks: any[]; pagination: any }>(`/tasks${qs ? `?${qs}` : ''}`);
+}
+
+export async function getTask(id: string) {
+  return request<any>(`/tasks/${id}`);
+}
+
+export async function getMyTasks() {
+  return request<any[]>('/tasks/mine');
+}
+
+export async function createTask(data: {
+  title: string;
+  description: string;
+  deliverableType?: string;
+  category: string;
+  tags?: string[];
+  budgetUsd: number;
+  deadlineAt?: string;
+  isRecurring?: boolean;
+  cronExpression?: string;
+  recurringEndsAt?: string;
+  runsPlanned?: number;
+  paymentToken: 'SOL' | 'USDC' | 'HATCH' | 'STRIPE';
+  paymentTx: string;
+  templateId?: string;
+  requireEvaluator?: boolean;
+}) {
+  return request<any>('/tasks', { method: 'POST', body: JSON.stringify(data) });
+}
+
+export async function cancelTask(id: string) {
+  return request<any>(`/tasks/${id}/cancel`, { method: 'POST' });
+}
+
+// ── Bids (client view + client accept) ──────────────────────────
+
+export async function getTaskBids(taskId: string) {
+  return request<any[]>(`/tasks/${taskId}/bids`);
+}
+
+export async function acceptBid(taskId: string, bidId: string) {
+  return request<any>(`/tasks/${taskId}/bids/${bidId}/accept`, { method: 'POST' });
+}
+
+// ── Deliverables ────────────────────────────────────────────────
+
+export async function getDeliverables(taskId: string) {
+  return request<any[]>(`/tasks/${taskId}/deliverables`);
+}
+
+export async function approveDeliverable(taskId: string, deliverableId: string) {
+  return request<any>(`/tasks/${taskId}/deliverables/${deliverableId}/approve`, {
+    method: 'POST',
+  });
+}
+
+export async function rejectDeliverable(taskId: string, deliverableId: string, reason: string) {
+  return request<any>(`/tasks/${taskId}/deliverables/${deliverableId}/reject`, {
+    method: 'POST',
+    body: JSON.stringify({ reason }),
+  });
+}
+
+export async function openDispute(taskId: string, data: { reason: string; statement?: string }) {
+  return request<any>(`/tasks/${taskId}/dispute`, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+// ── Admin (requires isAdmin on session) ─────────────────────────
+
+export async function adminListDisputes(status: 'open' | 'resolved' = 'open') {
+  return request<any[]>(`/admin/disputes?status=${status}`);
+}
+
+export async function adminResolveDispute(
+  id: string,
+  data: {
+    outcome: 'release' | 'refund' | 'partial';
+    resolution: string;
+    partialSplit?: { clientRefundUsd: number; agentPayoutUsd: number };
+  },
+) {
+  return request<{ resolved: boolean; clientRefundUsd: number; agentPayoutUsd: number }>(
+    `/admin/disputes/${id}/resolve`,
+    { method: 'POST', body: JSON.stringify(data) },
+  );
+}
+
+// ── Agents (public + owner) ─────────────────────────────────────
+
+export async function listAgents(params?: {
+  category?: string;
+  search?: string;
+  sort?: string;
+  skills?: string;
+  verified?: boolean;
+}) {
+  const q = new URLSearchParams();
+  Object.entries(params || {}).forEach(([k, v]) => {
+    if (v !== undefined && v !== null && v !== '') q.set(k, String(v));
+  });
+  const qs = q.toString();
+  return request<{ agents: any[]; pagination: any }>(`/agents${qs ? `?${qs}` : ''}`);
+}
+
+export async function getPopularSkills(limit = 30) {
+  return request<Array<{ skill: string; count: number }>>(
+    `/public/skills/popular?limit=${limit}`,
+  );
+}
+
+export async function getAgent(slug: string) {
+  return request<any>(`/agents/${slug}`);
+}
+
+export async function getMyAgents() {
+  return request<any[]>('/agents/mine');
+}
+
+export async function createAgent(data: {
+  name: string;
+  description?: string;
+  avatarUrl?: string;
+  framework?: string;
+  hostAgentId?: string;
+  categories: string[];
+  autoBid?: boolean;
+  baseRateUsd?: number;
+  webhookUrl?: string;
+}) {
+  return request<{ agent: any; apiKey: string }>('/agents', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+export async function updateAgent(id: string, data: any) {
+  return request<any>(`/agents/${id}`, { method: 'PATCH', body: JSON.stringify(data) });
+}
+
+export async function rotateAgentKey(id: string) {
+  return request<{ apiKey: string }>(`/agents/${id}/rotate-key`, { method: 'POST' });
+}
+
+export async function getImportableHostAgents() {
+  return request<{ agents: any[] }>('/agents/import/host-agents');
+}
+
+export async function importHostAgent(data: {
+  hostAgentId: string;
+  categories: string[];
+  baseRateUsd?: number;
+  autoBid?: boolean;
+}) {
+  return request<{ agent: any; apiKey: string }>('/agents/import', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+// ── Services (AgentService — Fiverr-gig hybrid) ────────────────
+
+export async function listServices(params?: {
+  page?: number;
+  limit?: number;
+  category?: string;
+  search?: string;
+}) {
+  const q = new URLSearchParams();
+  Object.entries(params || {}).forEach(([k, v]) => {
+    if (v !== undefined && v !== null && v !== '') q.set(k, String(v));
+  });
+  const qs = q.toString();
+  return request<{ services: any[]; pagination: any }>(
+    `/services${qs ? `?${qs}` : ''}`,
+  );
+}
+
+export async function getService(slug: string) {
+  return request<any>(`/services/${slug}`);
+}
+
+export async function getMyServices() {
+  return request<any[]>('/services/mine/all');
+}
+
+export async function createService(data: {
+  agentId: string;
+  title: string;
+  description: string;
+  category: string;
+  tags?: string[];
+  deliverableType?: string;
+  fixedPriceUsd: number;
+  turnaroundHours?: number;
+}) {
+  return request<any>('/services', { method: 'POST', body: JSON.stringify(data) });
+}
+
+export async function updateService(id: string, data: any) {
+  return request<any>(`/services/${id}`, { method: 'PATCH', body: JSON.stringify(data) });
+}
+
+export async function deleteService(id: string) {
+  return request<void>(`/services/${id}`, { method: 'DELETE' });
+}
+
+export async function buyService(
+  slug: string,
+  data: { paymentToken: 'SOL' | 'USDC' | 'HATCH' | 'STRIPE'; paymentTx: string; description?: string },
+) {
+  return request<any>(`/services/${slug}/buy`, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+// ── Reviews ─────────────────────────────────────────────────────
+
+export async function createReview(data: { taskId: string; rating: number; comment?: string }) {
+  return request<any>('/reviews', { method: 'POST', body: JSON.stringify(data) });
+}
+
+export async function getAgentReviews(agentId: string) {
+  return request<any[]>(`/reviews/agent/${agentId}`);
+}
+
+// ── Evaluator (Phase 6) ────────────────────────────────────────
+
+export async function getPendingEvaluations() {
+  return request<any[]>('/evaluations/pending');
+}
+
+export async function signEvaluation(
+  id: string,
+  decision: 'approve' | 'request_revisions',
+  reasoning?: string,
+) {
+  return request<{ signed: boolean; decision: string }>(`/evaluations/${id}/sign`, {
+    method: 'POST',
+    body: JSON.stringify({ decision, reasoning }),
+  });
+}
+
+export async function getSplitPreviewWithEvaluator(budgetUsd: number) {
+  return request<{ operatorUsd: number; platformUsd: number; evaluatorUsd: number }>(
+    `/evaluations/split-preview?budgetUsd=${budgetUsd}`,
+  );
 }
