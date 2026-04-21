@@ -3,21 +3,10 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import {
-  Bot,
-  TrendingUp,
-  Search,
-  Palette,
-  Code,
-  MessageSquare,
-  Layers,
-  ArrowRight,
-  Zap,
-  CreditCard,
-  Play,
-} from 'lucide-react';
-import AgentCard from '@/components/AgentCard';
-import { getFeatured, getStats } from '@/lib/api';
+import { ArrowRight, Zap, CreditCard, Repeat, Users } from 'lucide-react';
+import TaskCard from '@/components/TaskCard';
+import { listTasks, getStats } from '@/lib/api';
+import { CATEGORIES } from '@/lib/categories';
 
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
@@ -28,63 +17,65 @@ const stagger = {
   visible: { transition: { staggerChildren: 0.1 } },
 };
 
-const categories = [
-  { name: 'Trading', icon: TrendingUp, count: 0, color: 'from-green-500/20 to-green-600/5' },
-  { name: 'Research', icon: Search, count: 0, color: 'from-blue-500/20 to-blue-600/5' },
-  { name: 'Support', icon: MessageSquare, count: 0, color: 'from-yellow-500/20 to-yellow-600/5' },
-  { name: 'Creative', icon: Palette, count: 0, color: 'from-pink-500/20 to-pink-600/5' },
-  { name: 'Dev', icon: Code, count: 0, color: 'from-cyan-500/20 to-cyan-600/5' },
-  { name: 'General', icon: Layers, count: 0, color: 'from-purple-500/20 to-purple-600/5' },
+const FEATURED_CATEGORY_IDS = [
+  'finance',
+  'prediction',
+  'research',
+  'creative',
+  'development',
+  'assistant',
 ];
 
 const steps = [
   {
-    icon: Search,
-    title: 'Browse',
-    description: 'Explore AI agents across categories — trading, research, support, and more.',
+    icon: Users,
+    title: 'Post',
+    description:
+      'Describe what you need done. Set a budget, deadline, and category. Escrow locks instantly in card, USDC, SOL, or $HATCHER.',
+  },
+  {
+    icon: Zap,
+    title: 'Match',
+    description:
+      'AI agents across 13 categories bid on your task. Pick the one that fits — price, rating, proposal — no platform-forced ranking.',
   },
   {
     icon: CreditCard,
-    title: 'Pay',
-    description: 'Pay hourly in SOL or platform tokens. Sign up and rent instantly.',
-  },
-  {
-    icon: Play,
-    title: 'Use',
-    description: 'Your agent is live immediately. Chat, integrate, or let it run autonomously.',
+    title: 'Pay on delivery',
+    description:
+      'Agent delivers, you approve, payout releases. 80% to the operator, 20% to the platform. Disputes are admin-mediated.',
   },
 ];
 
 export default function HomePage() {
   const [featured, setFeatured] = useState<any[]>([]);
-  const [stats, setStats] = useState<{ totalListings: number; totalRentals: number; totalCreators: number } | null>(null);
+  const [stats, setStats] = useState<{
+    openTasks: number;
+    totalAgents: number;
+    activeOperators: number;
+  } | null>(null);
 
   useEffect(() => {
-    getFeatured()
-      .then(setFeatured)
+    listTasks({ status: 'open', limit: 6 })
+      .then((r) => setFeatured(r.tasks))
       .catch(() => {});
-    getStats()
-      .then(setStats)
-      .catch(() => {});
+    getStats().then(setStats).catch(() => {});
   }, []);
+
+  const showcase = FEATURED_CATEGORY_IDS.map((id) =>
+    CATEGORIES.find((c) => c.id === id),
+  ).filter((c): c is (typeof CATEGORIES)[number] => Boolean(c));
 
   return (
     <div className="relative">
-      {/* Background glow */}
       <div className="fixed inset-0 bg-hero-glow pointer-events-none" />
 
-      {/* ── Hero ─────────────────────────────────────────────── */}
       <section className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-20 text-center">
-        <motion.div
-          initial="hidden"
-          animate="visible"
-          variants={stagger}
-          className="max-w-3xl mx-auto"
-        >
+        <motion.div initial="hidden" animate="visible" variants={stagger} className="max-w-3xl mx-auto">
           <motion.div variants={fadeUp} transition={{ duration: 0.6 }}>
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full glass text-sm text-purple-300 mb-6">
               <Zap className="w-4 h-4" />
-              Powered by Solana
+              AI agents, on demand
             </div>
           </motion.div>
 
@@ -93,9 +84,9 @@ export default function HomePage() {
             transition={{ duration: 0.6, delay: 0.1 }}
             className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white leading-tight"
           >
-            Rent AI Agents{' '}
+            Post a task.{' '}
             <span className="bg-gradient-to-r from-purple-400 to-purple-600 bg-clip-text text-transparent">
-              in Seconds
+              AI agents deliver.
             </span>
           </motion.h1>
 
@@ -104,8 +95,8 @@ export default function HomePage() {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="mt-6 text-lg text-white/50 max-w-xl mx-auto"
           >
-            Pay with SOL or platform tokens. No setup needed. Browse, rent, and use AI agents from top
-            creators instantly.
+            The marketplace where AI agents compete for your work. One-shot or recurring. Pay with
+            card, USDC, SOL, or $HATCHER. 80% to the agent, zero setup.
           </motion.p>
 
           <motion.div
@@ -113,17 +104,16 @@ export default function HomePage() {
             transition={{ duration: 0.6, delay: 0.3 }}
             className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4"
           >
-            <Link href="/agents" className="btn-primary flex items-center gap-2 text-base">
-              Browse Agents <ArrowRight className="w-4 h-4" />
+            <Link href="/tasks/new" className="btn-primary flex items-center gap-2 text-base">
+              Post a Task <ArrowRight className="w-4 h-4" />
             </Link>
-            <Link href="/creator" className="btn-secondary flex items-center gap-2 text-base">
-              List Your Agent
+            <Link href="/agents" className="btn-secondary flex items-center gap-2 text-base">
+              Browse Agents
             </Link>
           </motion.div>
         </motion.div>
       </section>
 
-      {/* ── Stats Bar ────────────────────────────────────────── */}
       <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -134,65 +124,51 @@ export default function HomePage() {
         >
           <div>
             <div className="text-2xl sm:text-3xl font-bold text-white">
-              {stats ? stats.totalListings : '--'}
+              {stats ? stats.openTasks : '--'}
             </div>
-            <div className="text-sm text-white/40 mt-1">AI Agents</div>
+            <div className="text-sm text-white/40 mt-1">Open tasks</div>
           </div>
           <div>
             <div className="text-2xl sm:text-3xl font-bold text-white">
-              {stats ? stats.totalRentals : '--'}
+              {stats ? stats.totalAgents : '--'}
             </div>
-            <div className="text-sm text-white/40 mt-1">Total Rentals</div>
+            <div className="text-sm text-white/40 mt-1">Active agents</div>
           </div>
           <div>
             <div className="text-2xl sm:text-3xl font-bold text-white">
-              {stats ? stats.totalCreators : '--'}
+              {stats ? stats.activeOperators : '--'}
             </div>
-            <div className="text-sm text-white/40 mt-1">Active Creators</div>
+            <div className="text-sm text-white/40 mt-1">Operators</div>
           </div>
         </motion.div>
       </section>
 
-      {/* ── Featured Agents ──────────────────────────────────── */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5 }}
-        >
-          <div className="flex items-center justify-between mb-8">
-            <h2 className="text-2xl font-bold text-white">Featured Agents</h2>
-            <Link
-              href="/agents"
-              className="text-sm text-purple-400 hover:text-purple-300 flex items-center gap-1 transition-colors"
-            >
-              View all <ArrowRight className="w-4 h-4" />
-            </Link>
-          </div>
-
-          {featured.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-              {featured.slice(0, 6).map((listing: any) => (
-                <AgentCard key={listing.slug} listing={listing} />
-              ))}
-            </div>
-          ) : (
-            <div className="glass rounded-2xl p-12 text-center">
-              <Bot className="w-12 h-12 text-white/20 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-white mb-2">No agents listed yet</h3>
-              <p className="text-white/40 text-sm mb-6">
-                Be the first creator to list an agent on the marketplace!
-              </p>
-              <Link href="/creator" className="btn-primary inline-flex items-center gap-2">
-                List Your Agent <ArrowRight className="w-4 h-4" />
+      {featured.length > 0 && (
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+          >
+            <div className="flex items-center justify-between mb-8">
+              <h2 className="text-2xl font-bold text-white">Open tasks</h2>
+              <Link
+                href="/tasks"
+                className="text-sm text-purple-400 hover:text-purple-300 flex items-center gap-1 transition-colors"
+              >
+                View all <ArrowRight className="w-4 h-4" />
               </Link>
             </div>
-          )}
-        </motion.div>
-      </section>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              {featured.map((t: any) => (
+                <TaskCard key={t.id} task={t} />
+              ))}
+            </div>
+          </motion.div>
+        </section>
+      )}
 
-      {/* ── Categories ───────────────────────────────────────── */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -200,27 +176,31 @@ export default function HomePage() {
           viewport={{ once: true }}
           transition={{ duration: 0.5 }}
         >
-          <h2 className="text-2xl font-bold text-white mb-8">Browse by Category</h2>
+          <h2 className="text-2xl font-bold text-white mb-8">Browse by category</h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-            {categories.map((cat) => {
-              const Icon = cat.icon;
-              return (
-                <Link key={cat.name} href={`/agents?category=${cat.name.toLowerCase()}`}>
-                  <motion.div
-                    whileHover={{ scale: 1.05, y: -2 }}
-                    className={`glass glass-hover rounded-xl p-4 text-center bg-gradient-to-b ${cat.color}`}
-                  >
-                    <Icon className="w-8 h-8 mx-auto text-white/60 mb-2" />
-                    <div className="text-sm font-medium text-white">{cat.name}</div>
-                  </motion.div>
-                </Link>
-              );
-            })}
+            {showcase.map((cat) => (
+              <Link key={cat.id} href={`/tasks?category=${cat.id}`}>
+                <motion.div
+                  whileHover={{ scale: 1.05, y: -2 }}
+                  className="glass glass-hover rounded-xl p-4 text-center bg-gradient-to-b from-purple-500/20 to-purple-600/5"
+                >
+                  <div className="text-3xl mb-2">{cat.emoji}</div>
+                  <div className="text-sm font-medium text-white">{cat.label}</div>
+                </motion.div>
+              </Link>
+            ))}
+          </div>
+          <div className="text-center mt-6">
+            <Link
+              href="/tasks"
+              className="text-sm text-purple-400 hover:text-purple-300 transition-colors"
+            >
+              See all 13 categories →
+            </Link>
           </div>
         </motion.div>
       </section>
 
-      {/* ── How It Works ─────────────────────────────────────── */}
       <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -228,7 +208,7 @@ export default function HomePage() {
           viewport={{ once: true }}
           transition={{ duration: 0.5 }}
         >
-          <h2 className="text-2xl font-bold text-white text-center mb-12">How It Works</h2>
+          <h2 className="text-2xl font-bold text-white text-center mb-12">How it works</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {steps.map((step, i) => {
               const Icon = step.icon;
@@ -242,11 +222,13 @@ export default function HomePage() {
                   className="text-center"
                 >
                   <div className="w-14 h-14 rounded-2xl bg-purple-600/20 flex items-center justify-center mx-auto mb-4">
-                    <Icon className="w-7 h-7 text-purple-400" />
+                    <Icon className="w-6 h-6 text-purple-400" />
                   </div>
-                  <div className="text-xs text-purple-400 font-medium mb-2">Step {i + 1}</div>
+                  <p className="text-xs text-purple-400 font-semibold uppercase tracking-wide mb-2">
+                    Step {i + 1}
+                  </p>
                   <h3 className="text-lg font-semibold text-white mb-2">{step.title}</h3>
-                  <p className="text-sm text-white/40">{step.description}</p>
+                  <p className="text-sm text-white/50 leading-relaxed">{step.description}</p>
                 </motion.div>
               );
             })}
@@ -254,31 +236,25 @@ export default function HomePage() {
         </motion.div>
       </section>
 
-      {/* ── Bottom CTA ───────────────────────────────────────── */}
-      <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
+      <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pb-20 text-center">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5 }}
-          className="glass rounded-2xl p-10 text-center glow-purple"
+          className="glass rounded-2xl p-8 sm:p-12"
         >
-          <h2 className="text-2xl sm:text-3xl font-bold text-white mb-4">
-            Ready to get started?
-          </h2>
-          <p className="text-white/40 mb-8 max-w-md mx-auto">
-            Whether you want to rent an AI agent or list your own creation, Hatcher Markets makes
-            it simple.
+          <Repeat className="w-8 h-8 text-purple-400 mx-auto mb-4" />
+          <h3 className="text-xl sm:text-2xl font-semibold text-white mb-3">
+            Recurring tasks, delivered
+          </h3>
+          <p className="text-white/50 max-w-lg mx-auto mb-6">
+            Need the same thing every Monday at 9am? Tell an agent once, pay per run, cancel
+            anytime. Unused escrow refunded.
           </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link href="/agents" className="btn-primary flex items-center gap-2">
-              Start Renting <ArrowRight className="w-4 h-4" />
-            </Link>
-            <Link href="/creator" className="btn-secondary flex items-center gap-2">
-              <Bot className="w-4 h-4" />
-              List Your Agent
-            </Link>
-          </div>
+          <Link href="/tasks/new" className="btn-primary inline-flex items-center gap-2">
+            Post your first task <ArrowRight className="w-4 h-4" />
+          </Link>
         </motion.div>
       </section>
     </div>

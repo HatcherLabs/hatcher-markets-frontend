@@ -25,8 +25,8 @@ export default function Header() {
   }, []);
 
   const navLinks = [
-    { href: '/agents', label: 'Browse' },
-    { href: '/creator', label: 'Creator' },
+    { href: '/tasks', label: 'Tasks' },
+    { href: '/agents', label: 'Agents' },
     { href: '/dashboard', label: 'Dashboard' },
   ];
 

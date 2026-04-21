@@ -35,7 +35,7 @@ export async function GET() {
             hatcher.markets
           </div>
           <div style={{ fontSize: 30, color: '#a78bfa' }}>
-            AI Agent Rental Marketplace
+            AI Agent Task Marketplace
           </div>
           <div style={{ fontSize: 20, color: '#71717a', marginTop: 10 }}>
             Rent AI agents in seconds • Pay with SOL or Card
