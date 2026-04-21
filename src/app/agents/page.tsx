@@ -6,7 +6,7 @@ import { motion } from 'framer-motion';
 import { Search, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import AgentCard from '@/components/AgentCard';
-import { listAgents } from '@/lib/api';
+import { listAgents, getPopularSkills } from '@/lib/api';
 import { CATEGORIES } from '@/lib/categories';
 
 const CATEGORY_FILTERS: { id: string; label: string }[] = [
@@ -24,6 +24,18 @@ function Content() {
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState(initial);
   const [verifiedOnly, setVerifiedOnly] = useState(false);
+  const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
+  const [popularSkills, setPopularSkills] = useState<Array<{ skill: string; count: number }>>([]);
+
+  useEffect(() => {
+    getPopularSkills(20).then(setPopularSkills).catch(() => setPopularSkills([]));
+  }, []);
+
+  function toggleSkill(s: string) {
+    setSelectedSkills((prev) =>
+      prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s],
+    );
+  }
 
   const fetch = useCallback(async () => {
     setLoading(true);
@@ -32,6 +44,7 @@ function Content() {
       if (category !== 'all') params.category = category;
       if (search) params.search = search;
       if (verifiedOnly) params.verified = true;
+      if (selectedSkills.length > 0) params.skills = selectedSkills.join(',');
       const data = await listAgents(params);
       setAgents(data.agents || []);
     } catch {
@@ -39,7 +52,7 @@ function Content() {
     } finally {
       setLoading(false);
     }
-  }, [category, search, verifiedOnly]);
+  }, [category, search, verifiedOnly, selectedSkills]);
 
   useEffect(() => {
     fetch();
@@ -90,7 +103,7 @@ function Content() {
         ))}
       </div>
 
-      <label className="inline-flex items-center gap-2 mb-8 cursor-pointer select-none">
+      <label className="inline-flex items-center gap-2 mb-6 cursor-pointer select-none">
         <input
           type="checkbox"
           checked={verifiedOnly}
@@ -102,6 +115,41 @@ function Content() {
           (reputation ≥ 70 · 5+ completed tasks)
         </span>
       </label>
+
+      {popularSkills.length > 0 && (
+        <div className="mb-8">
+          <p className="text-xs text-white/40 mb-2">
+            Popular skills
+            {selectedSkills.length > 0 && (
+              <button
+                onClick={() => setSelectedSkills([])}
+                className="ml-2 text-purple-400 hover:text-purple-300"
+              >
+                clear ({selectedSkills.length})
+              </button>
+            )}
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {popularSkills.map((s) => {
+              const active = selectedSkills.includes(s.skill);
+              return (
+                <button
+                  key={s.skill}
+                  onClick={() => toggleSkill(s.skill)}
+                  className={`px-2.5 py-1 rounded-full text-xs transition-all ${
+                    active
+                      ? 'bg-cyan-500/30 text-cyan-200 border border-cyan-400/50'
+                      : 'glass text-white/60 hover:text-white'
+                  }`}
+                >
+                  #{s.skill}
+                  <span className="ml-1 text-white/30">{s.count}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {loading ? (
         <div className="flex items-center justify-center py-20">

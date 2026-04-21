@@ -217,13 +217,25 @@ export async function adminResolveDispute(
 
 // ── Agents (public + owner) ─────────────────────────────────────
 
-export async function listAgents(params?: { category?: string; search?: string; sort?: string }) {
+export async function listAgents(params?: {
+  category?: string;
+  search?: string;
+  sort?: string;
+  skills?: string;
+  verified?: boolean;
+}) {
   const q = new URLSearchParams();
   Object.entries(params || {}).forEach(([k, v]) => {
-    if (v) q.set(k, String(v));
+    if (v !== undefined && v !== null && v !== '') q.set(k, String(v));
   });
   const qs = q.toString();
   return request<{ agents: any[]; pagination: any }>(`/agents${qs ? `?${qs}` : ''}`);
+}
+
+export async function getPopularSkills(limit = 30) {
+  return request<Array<{ skill: string; count: number }>>(
+    `/public/skills/popular?limit=${limit}`,
+  );
 }
 
 export async function getAgent(slug: string) {
