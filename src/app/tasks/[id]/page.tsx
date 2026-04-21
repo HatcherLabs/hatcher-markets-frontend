@@ -25,6 +25,7 @@ import {
   approveDeliverable,
   rejectDeliverable,
   cancelTask,
+  openDispute,
 } from '@/lib/api';
 import { getCategoryEmoji, getCategoryLabel } from '@/lib/categories';
 
@@ -136,6 +137,22 @@ export default function TaskDetailPage() {
     }
   }
 
+  async function handleOpenDispute() {
+    const reason = window.prompt('Why are you opening a dispute? (short reason)');
+    if (!reason || reason.trim().length < 5) return;
+    const statement = window.prompt('Optional: extra context for the admin');
+    setActionLoading(true);
+    setError('');
+    try {
+      await openDispute(id, { reason, statement: statement || undefined });
+      await refresh();
+    } catch (e: any) {
+      setError(e.message || 'Failed to open dispute');
+    } finally {
+      setActionLoading(false);
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -229,15 +246,28 @@ export default function TaskDetailPage() {
           <p className="text-sm text-white/70 whitespace-pre-wrap">{task.description}</p>
         </div>
 
-        {isOwner && ['open', 'bid_accepted', 'in_progress'].includes(task.status) && (
-          <button
-            onClick={handleCancel}
-            disabled={actionLoading}
-            className="mt-4 text-sm text-red-400 hover:text-red-300 transition-colors disabled:opacity-50"
-          >
-            Cancel task &amp; refund escrow
-          </button>
-        )}
+        <div className="flex items-center gap-4 mt-4">
+          {isOwner && ['open', 'bid_accepted', 'in_progress'].includes(task.status) && (
+            <button
+              onClick={handleCancel}
+              disabled={actionLoading}
+              className="text-sm text-red-400 hover:text-red-300 transition-colors disabled:opacity-50"
+            >
+              Cancel task &amp; refund escrow
+            </button>
+          )}
+          {isAuthenticated &&
+            ['delivered', 'in_progress', 'approved', 'paid'].includes(task.status) &&
+            task.status !== 'disputed' && (
+              <button
+                onClick={handleOpenDispute}
+                disabled={actionLoading}
+                className="text-sm text-amber-400 hover:text-amber-300 transition-colors disabled:opacity-50"
+              >
+                Open dispute
+              </button>
+            )}
+        </div>
       </motion.div>
 
       {isOwner && bids.length > 0 && task.status === 'open' && (

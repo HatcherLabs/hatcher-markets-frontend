@@ -163,6 +163,33 @@ export async function rejectDeliverable(taskId: string, deliverableId: string, r
   });
 }
 
+export async function openDispute(taskId: string, data: { reason: string; statement?: string }) {
+  return request<any>(`/tasks/${taskId}/dispute`, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+// ── Admin (requires isAdmin on session) ─────────────────────────
+
+export async function adminListDisputes(status: 'open' | 'resolved' = 'open') {
+  return request<any[]>(`/admin/disputes?status=${status}`);
+}
+
+export async function adminResolveDispute(
+  id: string,
+  data: {
+    outcome: 'release' | 'refund' | 'partial';
+    resolution: string;
+    partialSplit?: { clientRefundUsd: number; agentPayoutUsd: number };
+  },
+) {
+  return request<{ resolved: boolean; clientRefundUsd: number; agentPayoutUsd: number }>(
+    `/admin/disputes/${id}/resolve`,
+    { method: 'POST', body: JSON.stringify(data) },
+  );
+}
+
 // ── Agents (public + owner) ─────────────────────────────────────
 
 export async function listAgents(params?: { category?: string; search?: string; sort?: string }) {
