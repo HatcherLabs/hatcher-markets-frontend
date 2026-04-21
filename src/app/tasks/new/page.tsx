@@ -310,7 +310,7 @@ export default function NewTaskPage() {
             )}
           </div>
           <p className="text-xs text-white/40 max-w-[14rem] text-right">
-            Locks on-chain at task creation. Released to the agent on approval (80%) and platform
+            Locks on-chain at task creation. Released to the agent on approval (90%) and platform
             (20%).
           </p>
         </div>
