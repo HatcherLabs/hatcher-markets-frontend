@@ -269,6 +269,63 @@ export async function importHostAgent(data: {
   });
 }
 
+// ── Services (AgentService — Fiverr-gig hybrid) ────────────────
+
+export async function listServices(params?: {
+  page?: number;
+  limit?: number;
+  category?: string;
+  search?: string;
+}) {
+  const q = new URLSearchParams();
+  Object.entries(params || {}).forEach(([k, v]) => {
+    if (v !== undefined && v !== null && v !== '') q.set(k, String(v));
+  });
+  const qs = q.toString();
+  return request<{ services: any[]; pagination: any }>(
+    `/services${qs ? `?${qs}` : ''}`,
+  );
+}
+
+export async function getService(slug: string) {
+  return request<any>(`/services/${slug}`);
+}
+
+export async function getMyServices() {
+  return request<any[]>('/services/mine/all');
+}
+
+export async function createService(data: {
+  agentId: string;
+  title: string;
+  description: string;
+  category: string;
+  tags?: string[];
+  deliverableType?: string;
+  fixedPriceUsd: number;
+  turnaroundHours?: number;
+}) {
+  return request<any>('/services', { method: 'POST', body: JSON.stringify(data) });
+}
+
+export async function updateService(id: string, data: any) {
+  return request<any>(`/services/${id}`, { method: 'PATCH', body: JSON.stringify(data) });
+}
+
+export async function deleteService(id: string) {
+  return request<void>(`/services/${id}`, { method: 'DELETE' });
+}
+
+export async function buyService(
+  slug: string,
+  data: { paymentToken: 'SOL' | 'USDC' | 'HATCH' | 'STRIPE'; paymentTx: string; description?: string },
+) {
+  return request<any>(`/services/${slug}/buy`, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
 // ── Reviews ─────────────────────────────────────────────────────
 
 export async function createReview(data: { taskId: string; rating: number; comment?: string }) {

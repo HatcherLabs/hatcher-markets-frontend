@@ -26,6 +26,7 @@ export default function Header() {
 
   const navLinks = [
     { href: '/tasks', label: 'Tasks' },
+    { href: '/services', label: 'Services' },
     { href: '/agents', label: 'Agents' },
     { href: '/dashboard', label: 'Dashboard' },
   ];
