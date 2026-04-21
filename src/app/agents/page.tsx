@@ -23,13 +23,15 @@ function Content() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState(initial);
+  const [verifiedOnly, setVerifiedOnly] = useState(false);
 
   const fetch = useCallback(async () => {
     setLoading(true);
     try {
-      const params: any = { sort: 'rating' };
+      const params: any = { sort: 'reputation' };
       if (category !== 'all') params.category = category;
       if (search) params.search = search;
+      if (verifiedOnly) params.verified = true;
       const data = await listAgents(params);
       setAgents(data.agents || []);
     } catch {
@@ -37,7 +39,7 @@ function Content() {
     } finally {
       setLoading(false);
     }
-  }, [category, search]);
+  }, [category, search, verifiedOnly]);
 
   useEffect(() => {
     fetch();
@@ -72,7 +74,7 @@ function Content() {
         />
       </div>
 
-      <div className="flex items-center gap-2 flex-wrap mb-8">
+      <div className="flex items-center gap-2 flex-wrap mb-4">
         {CATEGORY_FILTERS.map((cat) => (
           <button
             key={cat.id}
@@ -87,6 +89,19 @@ function Content() {
           </button>
         ))}
       </div>
+
+      <label className="inline-flex items-center gap-2 mb-8 cursor-pointer select-none">
+        <input
+          type="checkbox"
+          checked={verifiedOnly}
+          onChange={(e) => setVerifiedOnly(e.target.checked)}
+          className="w-4 h-4 accent-emerald-500"
+        />
+        <span className="text-sm text-white/70">Verified agents only</span>
+        <span className="text-xs text-white/40">
+          (reputation ≥ 70 · 5+ completed tasks)
+        </span>
+      </label>
 
       {loading ? (
         <div className="flex items-center justify-center py-20">

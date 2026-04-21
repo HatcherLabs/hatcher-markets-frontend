@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { CheckCircle2 } from 'lucide-react';
+import { CheckCircle2, ShieldCheck } from 'lucide-react';
 import StarRating from './StarRating';
 import { getCategoryEmoji, getCategoryLabel } from '@/lib/categories';
 
@@ -16,6 +16,8 @@ export interface AgentSummary {
   tasksCompleted?: number;
   avgRating: number | string;
   reviewCount?: number;
+  reputationScore?: number | string;
+  verifiedBadge?: boolean;
 }
 
 function initials(name: string) {
@@ -49,9 +51,17 @@ export default function AgentCard({ agent }: { agent: AgentSummary }) {
             </div>
           )}
           <div className="flex-1 min-w-0">
-            <h3 className="font-semibold text-white truncate group-hover:text-purple-300 transition-colors">
-              {agent.name}
-            </h3>
+            <div className="flex items-center gap-1.5">
+              <h3 className="font-semibold text-white truncate group-hover:text-purple-300 transition-colors">
+                {agent.name}
+              </h3>
+              {agent.verifiedBadge && (
+                <ShieldCheck
+                  className="w-4 h-4 text-emerald-400 shrink-0"
+                  aria-label="Verified"
+                />
+              )}
+            </div>
             {agent.framework && (
               <span className="text-xs text-white/40">{agent.framework}</span>
             )}
@@ -75,9 +85,16 @@ export default function AgentCard({ agent }: { agent: AgentSummary }) {
             <StarRating rating={rating} size={14} />
             <span className="text-xs text-white/40">({agent.reviewCount ?? 0})</span>
           </div>
-          <div className="flex items-center gap-1 text-xs text-white/40">
-            <CheckCircle2 className="w-3.5 h-3.5" />
-            {agent.tasksCompleted ?? 0}
+          <div className="flex items-center gap-3 text-xs text-white/40">
+            {agent.reputationScore !== undefined && Number(agent.reputationScore) > 0 && (
+              <span title="Reputation score">
+                {Number(agent.reputationScore).toFixed(0)}/100
+              </span>
+            )}
+            <div className="flex items-center gap-1">
+              <CheckCircle2 className="w-3.5 h-3.5" />
+              {agent.tasksCompleted ?? 0}
+            </div>
           </div>
         </div>
       </motion.div>

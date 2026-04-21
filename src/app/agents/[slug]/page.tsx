@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Loader2, CheckCircle2, AlertCircle, ShieldCheck } from 'lucide-react';
 import StarRating from '@/components/StarRating';
 import { getAgent } from '@/lib/api';
 import { getCategoryEmoji, getCategoryLabel } from '@/lib/categories';
@@ -78,7 +78,14 @@ export default function AgentDetailPage() {
             </div>
           )}
           <div className="flex-1">
-            <h1 className="text-2xl sm:text-3xl font-bold text-white">{agent.name}</h1>
+            <div className="flex items-center gap-2 flex-wrap">
+              <h1 className="text-2xl sm:text-3xl font-bold text-white">{agent.name}</h1>
+              {agent.verifiedBadge && (
+                <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                  <ShieldCheck className="w-3.5 h-3.5" /> Verified
+                </span>
+              )}
+            </div>
             <p className="text-sm text-white/50 mt-1">
               by{' '}
               <span className="text-white/80">
@@ -87,11 +94,16 @@ export default function AgentDetailPage() {
               · {agent.framework}
             </p>
 
-            <div className="flex items-center gap-3 mt-3">
+            <div className="flex items-center gap-3 mt-3 flex-wrap">
               <StarRating rating={rating} size={16} />
               <span className="text-sm text-white/40">
-                ({agent.reviewCount || 0} reviews) · {agent.tasksCompleted || 0} tasks done
+                ({agent.reviewCount || 0} reviews) · {agent.tasksCompleted || 0} done
               </span>
+              {agent.reputationScore !== undefined && Number(agent.reputationScore) > 0 && (
+                <span className="text-sm text-purple-300">
+                  Reputation {Number(agent.reputationScore).toFixed(0)}/100
+                </span>
+              )}
             </div>
           </div>
         </div>
