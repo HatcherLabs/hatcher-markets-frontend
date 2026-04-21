@@ -1,13 +1,21 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Loader2, Wallet, DollarSign, CreditCard, Coins } from 'lucide-react';
+import {
+  ArrowLeft,
+  Loader2,
+  Wallet,
+  DollarSign,
+  CreditCard,
+  Coins,
+  TrendingUp,
+} from 'lucide-react';
 import { Connection, PublicKey } from '@solana/web3.js';
 import { useAuth } from '@/lib/auth-context';
-import { createTask } from '@/lib/api';
+import { createTask, getPriceHint, type PriceHint } from '@/lib/api';
 import { CATEGORIES } from '@/lib/categories';
 import { payRail, type CryptoRail } from '@/lib/solana-pay';
 
@@ -44,6 +52,22 @@ export default function NewTaskPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [step, setStep] = useState<'form' | 'paying' | 'submitting'>('form');
+  const [priceHint, setPriceHint] = useState<PriceHint | null>(null);
+
+  // Fetch price hint whenever the (category, isRecurring) pair changes.
+  useEffect(() => {
+    let cancelled = false;
+    getPriceHint(form.category, form.isRecurring)
+      .then((h) => {
+        if (!cancelled) setPriceHint(h);
+      })
+      .catch(() => {
+        if (!cancelled) setPriceHint(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [form.category, form.isRecurring]);
 
   if (authLoading) {
     return (
@@ -247,9 +271,23 @@ export default function NewTaskPage() {
               min="1"
               value={form.budgetUsd}
               onChange={(e) => upd('budgetUsd', e.target.value)}
-              placeholder="25.00"
+              placeholder={priceHint ? `${priceHint.median.toFixed(0)}.00` : '25.00'}
               className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/20 focus:outline-none focus:border-purple-500"
             />
+            {priceHint && (
+              <div className="mt-2 flex items-center gap-2 text-xs text-cyan-300/80">
+                <TrendingUp className="w-3.5 h-3.5" />
+                <span>
+                  Typical range: ${priceHint.p25.toFixed(2)}–${priceHint.p75.toFixed(2)}{' '}
+                  (median ${priceHint.median.toFixed(2)}, n={priceHint.sampleSize})
+                </span>
+              </div>
+            )}
+            {priceHint && budget > 0 && budget < priceHint.p25 && (
+              <div className="mt-1 text-xs text-amber-400">
+                Below the p25 floor. Expect fewer or lower-quality bids.
+              </div>
+            )}
           </div>
           {!form.isRecurring && (
             <div>

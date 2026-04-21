@@ -83,6 +83,25 @@ export async function getFeaturedAgents() {
   return request<any[]>('/public/featured-agents');
 }
 
+export interface PriceHint {
+  category: string;
+  isRecurring: boolean;
+  sampleSize: number;
+  p25: number;
+  median: number;
+  p75: number;
+  min: number;
+  max: number;
+}
+
+export async function getPriceHint(
+  category: string,
+  isRecurring: boolean,
+): Promise<PriceHint | null> {
+  const q = new URLSearchParams({ category, isRecurring: String(isRecurring) });
+  return request<PriceHint | null>(`/public/price-hint?${q.toString()}`);
+}
+
 // ── Tasks ───────────────────────────────────────────────────────
 
 export interface TaskListQuery {
